@@ -1,0 +1,51 @@
+<ion-view>
+
+   <md-content layout-fill layout="column" layout-align="center center">
+
+        <div layout="row">
+            <md-checkbox ng-model="raw_graph" aria-label="Raw Graph">
+              Raw
+            </md-checkbox>
+            <md-checkbox ng-model="feature_graph" aria-label="Feature Graph">
+              Feature
+            </md-checkbox>
+        </div>
+
+        <div style="width: 100%;" ng-show="raw_graph">
+            <canvas id="line" class="chart chart-line" chart-data="data"
+              chart-labels="labels" chart-legend="true" chart-series="series"
+              chart-options="option" >
+           </canvas>
+        </div>
+
+        <div layout-fill style="width:100%;" ng-show="feature_graph">
+            <canvas id="analysis" class="chart chart-line" chart-data="data_analysis"
+              chart-labels="labels_analysis" chart-legend="true" chart-series="series_analysis"
+              chart-options="option_analysis" >
+           </canvas>
+        </div>
+
+        <md-radio-group ng-model="feature_mode" ng-show="change_mode">
+            <div layout="row">
+                <md-radio-button value="Avg"> Avg </md-radio-button>
+                <md-radio-button value="Std"> Std </md-radio-button>
+                <md-radio-button value="1-dev"> 1-dev </md-radio-button>
+            </div>
+        </md-radio-group>
+
+        <div ng-show="isCollecting">
+            {{recording_message}}
+        </div>
+
+
+   </md-content>
+
+   <div class="tabs no-border no-padding" style="height:auto; background-color: transparent; background-image: none;">
+        <section layout="row" layout-align="center center" style="padding-bottom: 8px;">
+          <md-button class="md-primary" ng-click="startCollection();" style="padding: 0px; margin: 0px;">시작</md-button>
+          <md-button class="md-accent" ng-click="sendGesture();" style="padding: 0px; margin: 0px;">기준 기록</md-button>
+          <md-button class="md-warn" ng-click="stopCollection();" style="padding: 0px; margin: 0px;">종료</md-button>
+          <md-button class="" ng-click="startAnalysis();" ng-disabled="data[0].length < 59" style="padding: 0px; margin: 0px;">분석</md-button>
+        </section>
+   </div>
+</ion-view>
