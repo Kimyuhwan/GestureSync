@@ -1,0 +1,83 @@
+<ion-view>
+
+    <md-content layout-fill layout="column" layout-align="center center">
+
+         <div style="width: 100%;">
+            <section layout="row" layout-align="center center">
+              <md-button class="" ng-click="changeMenu('Graph')">Graph</md-button>
+              <md-button class="" ng-click="changeMenu('Feature');">Feature</md-button>
+              <md-button class="" ng-click="changeMenu('Method');">Method</md-button>
+            </section>
+
+            <section layout="row" layout-align="center center" ng-show="menu_graph">
+                 <md-checkbox ng-model="raw_graph" aria-label="Raw Graph">
+                  Raw
+                </md-checkbox>
+                <md-checkbox ng-model="ground_graph" aria-label="Ground Graph">
+                  Ground
+                </md-checkbox>
+                <md-checkbox ng-model="analysis_graph" aria-label="Analysis Graph">
+                  Analysis
+                </md-checkbox>
+            </section>
+
+            <section layout="row" layout-align="center center" ng-show="menu_feature">
+                <md-checkbox ng-model="feature_x" aria-label="Feature X">
+                  X
+                </md-checkbox>
+                <md-checkbox ng-model="feature_y" aria-label="Feature Y">
+                  Y
+                </md-checkbox>
+                <md-checkbox ng-model="feature_z" aria-label="Feature Z">
+                  Z
+                </md-checkbox>
+                <md-checkbox ng-model="feature_magnitude" aria-label="Feature Magnitude">
+                  |V|
+                </md-checkbox>
+                <md-checkbox ng-model="feature_x_dev" aria-label="Feature X Dev">
+                  X'
+                </md-checkbox>
+                <md-checkbox ng-model="feature_y_dev" aria-label="Feature Y Dev">
+                  Y'
+                </md-checkbox>
+                <md-checkbox ng-model="feature_z_dev" aria-label="Feature Z Dev">
+                  Z'
+                </md-checkbox>
+            </section>
+
+            <section layout="row" layout-align="center center" ng-show="menu_method">
+                <md-button class="" ng-click="normalize();">Normalize</md-button>
+                <md-button class="" ng-click="denormalize();">De-normalize</md-button>
+            </section>
+        </div>
+
+        <div style="width: 100%;" ng-show="raw_graph">
+            <canvas id="line" class="chart chart-line" chart-data="data"
+              chart-labels="labels" chart-legend="true" chart-series="series"
+              chart-options="option" >
+           </canvas>
+        </div>
+
+        <div layout-fill style="width:100%;" ng-show="analysis_graph">
+            <canvas id="analysis" class="chart chart-line"
+              chart-series="series_analysis" chart-data="data_analysis" chart-labels="labels_analysis" chart-legend="true"
+              chart-options="option_analysis">
+            </canvas>
+        </div>
+
+        <div layout-fill style="width:100%;" ng-show="ground_graph">
+            <canvas id="ground" class="chart chart-line" chart-data="data_ground"
+              chart-labels="labels_ground" chart-legend="true" chart-series="series_ground"
+              chart-options="option_ground" >
+           </canvas>
+        </div>
+
+    </md-content>
+
+    <div class="tabs no-border no-padding" style="height:auto; background-color: transparent; background-image: none;">
+        <section layout="row" layout-align="center center">
+          <md-button class="md-primary" ng-click="startAnalysis();" ng-disabled="!analysis_available">분석 시작</md-button>
+          <md-button class="" ng-click="goBack();">처음 화면으로</md-button>
+        </section>
+    </div>
+</ion-view>
