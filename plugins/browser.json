@@ -38,7 +38,20 @@
         },
         "net.yoik.cordova.plugins.screenorientation": {
             "PACKAGE_NAME": "com.ionicframework.example866029"
+        },
+        "de.neofonie.cordova.plugin.nativeaudio": {
+            "PACKAGE_NAME": "com.ionicframework.example866029"
+        },
+        "org.apache.cordova.media": {
+            "PACKAGE_NAME": "com.ionicframework.example866029"
+        },
+        "org.apache.cordova.vibration": {
+            "PACKAGE_NAME": "com.nclab.gesture"
         }
     },
-    "dependent_plugins": {}
+    "dependent_plugins": {
+        "org.apache.cordova.file": {
+            "PACKAGE_NAME": "com.ionicframework.example866029"
+        }
+    }
 }

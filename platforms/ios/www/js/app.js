@@ -5,24 +5,41 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
-angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngMaterial', 'ngCordova', 'chart.js'])
+angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngMaterial', 'ngCordova', 'chart.js','btford.socket-io'])
 
-.run(function($ionicPlatform) {
+.run(function($ionicPlatform, $rootScope) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
     if (window.cordova && window.cordova.plugins && window.cordova.plugins.Keyboard) {
       cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
       cordova.plugins.Keyboard.disableScroll(true);
-
     }
+
     if (window.StatusBar) {
       // org.apache.cordova.statusbar required
       StatusBar.styleLightContent();
     }
 
     screen.unlockOrientation();
+
+    document.addEventListener("pause", function() {
+        console.log("The application is paused");
+        $rootScope.$apply(function() {
+            $rootScope.eventHappen = "pause";
+        });
+    }, false);
+
+    document.addEventListener("resume", function() {
+        console.log("The application is resuming");
+        $rootScope.$apply(function() {
+            $rootScope.eventHappen = "resume";
+        });
+    }, false);
+
   });
+
+
 })
 
 .config(function($stateProvider, $urlRouterProvider) {
@@ -45,10 +62,34 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     params: {raw_data: null},
     templateUrl: 'templates/analysis.html',
     controller: 'analysisCtrl'
+  })
+
+  .state('demo', {
+    url: '/demo',
+    templateUrl: 'templates/demo.html',
+    controller: 'demoCtrl'
+  })
+
+  .state('login', {
+    url: '/login',
+    templateUrl: 'templates/login.html',
+    controller: 'loginCtrl'
+  })
+
+  .state('oz', {
+    url: '/oz',
+    templateUrl: 'templates/oz.html',
+    controller: 'ozCtrl'
+  })
+
+  .state('end', {
+    url: '/end',
+    templateUrl: 'templates/end.html',
+    controller: 'endCtrl'
   });
 
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/home');
+  $urlRouterProvider.otherwise('/login');
 
 });

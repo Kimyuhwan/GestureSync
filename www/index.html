@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+    <meta http-equiv="Content-Security-Policy" content="default-src *; script-src 'self' 'unsafe-inline' 'unsafe-eval' *; style-src  'self' 'unsafe-inline' *">
     <title></title>
 
     <link href="lib/ionic/css/ionic.css" rel="stylesheet">
@@ -37,10 +38,12 @@
     <script src="lib/angular-aria/angular-aria.min.js"></script>
     <script src="lib/angular-material/angular-material.min.js"></script>
 
+    <!-- socket io -->
+    <script src="http://128.199.239.83:5000/socket.io/socket.io.js"></script>
+    <script src="lib/angular-socket-io/socket.js"></script>
 
   </head>
   <body ng-app="starter">
-
     <!--
       The views will be rendered in the <ion-nav-view> directive below
       Templates are in the /templates folder (but you could also

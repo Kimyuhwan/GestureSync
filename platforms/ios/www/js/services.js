@@ -1,5 +1,17 @@
 angular.module('starter.services', [])
 
+.factory('$localstorage', ['$window', function($window) {
+        return {
+            setID: function (value) {
+                $window.localStorage['ID'] = value;
+            },
+            getID: function () {
+                return $window.localStorage['ID']  || null;
+            }
+        }
+    }
+])
+
 .factory('$communication', ['$http', function($http){
 
         var baseUrl = "http://128.199.239.83:3000/";
@@ -9,6 +21,12 @@ angular.module('starter.services', [])
             },
             getGround: function(data, success, error) {
                 $http.get(baseUrl + 'gesture_test/get', data).success(success).error(error)
+            },
+            saveCollection: function(data, success, error) {
+                $http.post(baseUrl + 'gesture_test/collection', data).success(success).error(error)
+            },
+            getTemplates: function(success, error) {
+                $http.get(baseUrl + 'gesture_test/gettemplate').success(success).error(error)
             }
         };
 
@@ -136,4 +154,23 @@ angular.module('starter.services', [])
             }
        };
 
-}]);
+}])
+
+.factory('$socket',function(socketFactory){
+
+    function mySocket() {
+        var myIoSocket = io.connect('http://128.199.239.83:5000');
+
+        mySocket = socketFactory({
+            ioSocket: myIoSocket
+        });
+
+        return mySocket;
+    }
+
+	return {
+        getSocket: function() {
+            return mySocket();
+        }
+    };
+});
