@@ -4,7 +4,6 @@ angular.module('starter.controllers', [])
 
   $scope.option = {animation: false, pointDot: false, datasetFill : false,
                     scaleOverride : true, scaleSteps : 8, scaleStepWidth : 5, scaleStartValue : -20 };
-
   $scope.option_analysis = {animation: false, pointDot: false, datasetFill : false};
 
   $scope.raw_graph = true;
@@ -251,7 +250,6 @@ angular.module('starter.controllers', [])
                     $scope.data[1] = recorded_data[1];
                     $scope.data[2] = recorded_data[2];
                     $scope.labels = recorded_labels;
-
 
                    //show confirm dialog
                    // An elaborate, custom popup
@@ -983,7 +981,7 @@ angular.module('starter.controllers', [])
     $scope.style_notsynched = {"background-color" : "white", "color": "black"};
     $scope.message_notsynched = "리듬에 맞춰서 제스처를 해주세요!";
     $scope.style_synched = {"background-color" : "#01FF70", "color": "black"};
-    $scope.message_synched = "싱크가 되었습니다! 계속해서 싱크에 맞춰주세요!";
+    $scope.message_synched = "싱크가 되었습니다!";
 
     $scope.origin_information = {"id":"Origin","style":$scope.style_notconnected,"me":false,"message":$scope.message_notconnected};
     $scope.user1_information = {"id":"User1","style":$scope.style_notconnected,"me":false,"message":$scope.message_notconnected};
@@ -1197,149 +1195,47 @@ angular.module('starter.controllers', [])
         }
     });
 
-    // Template 서버에서 가져오기
-    // Global template_dictionary
-    var template_dictionary = {};
-    // 분석을 위해 normalized 된 template feature
-    $scope.featured_templates = {};
-    // get template
-    $communication.getTemplates(function(res) {
-        if(res.type) {
-            console.log('get Templates success : # of templates = ' + res.data.length);
-            var temp_dic = {};
-            var templates = res.data;
-            templates.forEach(function(template) {
-                temp_dic[template.template_name] = template;
-            });
-            template_dictionary = temp_dic;
+    var stop = undefined;
 
-            // normalize
-            // template data normalization
-            var template_keys = [];
-            for (var key in template_dictionary) {
-                if(template_dictionary.hasOwnProperty(key)) {
-                    template_keys.push(key);
-                }
-            }
-            console.log('normalize : template data / template_keys = ' + template_keys);
-            for(var k = 0; k < template_keys.length; k++) {
-                key = template_keys[k];
-                console.log(key);
-
-                var template_data_length = template_dictionary[key].accel_x.length;
-                var norm_accel_x = [];
-                var norm_accel_y = [];
-                var norm_accel_z = [];
-                for(i = 0; i < template_data_length; i++) {
-                    var template_magnitude = Math.sqrt(template_dictionary[key].accel_x[i] * template_dictionary[key].accel_x[i] + template_dictionary[key].accel_y[i] * template_dictionary[key].accel_y[i] + template_dictionary[key].accel_z[i] * template_dictionary[key].accel_z[i]);
-                    norm_accel_x.push(template_dictionary[key].accel_x[i] / template_magnitude);
-                    norm_accel_y.push(template_dictionary[key].accel_y[i] / template_magnitude);
-                    norm_accel_z.push(template_dictionary[key].accel_z[i] / template_magnitude);
-                }
-
-                template_dictionary[key].accel_x = norm_accel_x;
-                template_dictionary[key].accel_y = norm_accel_y;
-                template_dictionary[key].accel_z = norm_accel_z;
-            }
-
-            // template feature setting
-            var num_template = Object.keys(template_dictionary).length;
-            console.log('# of template : ' + num_template);
-            console.log('template names');
-            console.log(template_keys);
-
-            // set series
-            var series = [];
-            for(k = 0; k < template_keys.length; k++) {
-                series.push(template_dictionary[template_keys[k]].template_name);
-            }
-            $scope.series_analysis = series;
-
-            // Template Features
-            for(k = 0; k < template_keys.length; k++) {
-                console.log("Template name : " + template_dictionary[template_keys[k]].template_name);
-                var template_data = [];
-                template_data.push(template_dictionary[template_keys[k]].accel_x);
-                template_data.push(template_dictionary[template_keys[k]].accel_y);
-                template_data.push(template_dictionary[template_keys[k]].accel_z);
-
-                template_data_length = template_data[0].length;
-                console.log("Data Length : " + template_data_length);
-
-                var template_features = [];
-                for(var i = 1; i < template_data_length; i++) {
-                    var template_feature = [];
-                    template_feature.push(template_data[0][i]);
-                    template_feature.push(template_data[1][i]);
-                    template_feature.push(template_data[2][i]);
-                    template_features.push(template_feature);
-                }
-
-                $scope.featured_templates[template_dictionary[template_keys[k]].template_name] = template_features;
-            }
-
-            // set data_analysis
-            var similarities = []; // for each template
-
-            for(k = 0; k < num_template; k++) {
-                similarities.push([]);
-            }
-            $scope.data_analysis = similarities;
-            $scope.labels_analysis = [];
-        } else {
-            console.log('get Templates fail');
-        }
-    }, function() {
-        console.log('get Templates fail');
-    });
-
-    // 시작을 누르면 데이터를 수집하기
-    $scope.series = ['X', 'Y', 'Z'];
-    $scope.data = [
-        [], // x
-        [], // y
-        []  // z
-    ];
-    $scope.timestamp = [];
-    $scope.labels = [];
-
-    $scope.series_analysis = [];
-    $scope.data_analysis = [
-        [], // x
-        [] // y
-    ];
-    $scope.labels_analysis = [];
-
-    var total_sample_size = 100;
-    var stop;
-    var frame_size = 10;
-    var window_size = 1;
-
-    $scope.collection_features = [];
-    $scope.analysis_index = 0;
-    $scope.collection_feature_magnitudes = [];
-
-    $scope.sum_magnitude = 0;
-
+    // Start Collection
     $scope.startCollection = function() {
-
         if ( angular.isDefined(stop) ) return;
+        console.log('started to test gesture');
 
-        // initialize raw mode
-        $scope.series = ['X', 'Y', 'Z'];
-        $scope.data = [
-            [], // x
-            [], // y
-            []  // z
-        ];
-        $scope.timestamp = [];
-        $scope.labels = [];
+        // status
+        $scope.current_state = "Nothing";
+        $scope.state_style = {"background-color":"white"};
 
         //
-        $scope.collection_features = [];
-        $scope.current_state = "Nothing";
+        $scope.testing = true;
+        $scope.left_button_activate = false;
+        $scope.right_button_activate = false;
 
-        $scope.state_style = {"background-color":"white"};
+        // initialize raw mode
+        $scope.collection_features = [];
+        $scope.collection_feature_magnitudes = [];
+        $scope.analysis_index = 0;
+
+        $scope.current_state = "Non";
+
+        // get templates from local storage
+
+        var left_template = $localstorage.getLeftTemplate()["left"];
+        var right_template = $localstorage.getRightTemplate()["right"];
+        console.log('Left Length : ' + left_template.length);
+        console.log('Right Length : ' + right_template.length);
+        var frame_size = Math.min(left_template.length, right_template.length); // 이거 어떻게 정해야하는지 고민되는 구만
+
+        $scope.left_distance = 0;
+        $scope.right_distance = 0;
+
+        var left_src = "/audio/Left.mp3";
+        var left_media = $cordovaMedia.newMedia(left_src);
+        left_media.setVolume(0.5);
+
+        var right_src = "/audio/Right.mp3";
+        var right_media = $cordovaMedia.newMedia(right_src);
+        right_media.setVolume(0.5);
 
         // start collecting
         var gravity = [0, 0, 0];
@@ -1347,102 +1243,62 @@ angular.module('starter.controllers', [])
           // get accelerometer data
           $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
 
-              var changed = false;
+              $scope.analysis_index++;
 
-              // set raw data
-              if($scope.data[0].length > total_sample_size) {
-                 $scope.data[0].shift();
-                 $scope.data[1].shift();
-                 $scope.data[2].shift();
-                 $scope.timestamp.shift();
-                 $scope.labels.shift();
-              }
-
-              // shift analysis data
-              if($scope.data_analysis[0].length > total_sample_size) {
-                  for(k = 0; k < $scope.series_analysis.length; k++) {
-                      $scope.data_analysis[k].shift();
-                  }
-                  $scope.labels_analysis.shift();
-              }
-
-              // calculate distance
+              // calculate similarity
               if($scope.collection_features.length > frame_size) {
                  $scope.collection_features.shift();
                  $scope.collection_feature_magnitudes.shift();
 
+                 // calculate average magnitude
                  var sum = 0;
-                 for(var i = 0; i < $scope.collection_feature_magnitudes.length; i++) {
+                 for(var i = $scope.collection_feature_magnitudes.length - 5; i < $scope.collection_feature_magnitudes.length; i++)
                     sum += $scope.collection_feature_magnitudes[i];
-                 }
-
                  $scope.avg_magnitude = sum / $scope.collection_feature_magnitudes.length;
 
                  if($scope.analysis_index % 2 == 0) {
-
-                     if($scope.avg_magnitude > 2.0) {
-
-
-                         for (var k = 0; k < $scope.series_analysis.length; k++) {
-                             var distance = $analyzer.getSimilarity($scope.featured_templates[$scope.series_analysis[k]], $scope.collection_features);
-                             $scope.data_analysis[k].push(distance);
-                             if(distance < 7) {
-                                if($scope.current_state != $scope.series_analysis[k])
-                                    changed = true;
-                                $scope.current_state = $scope.series_analysis[k];
-                             }
-                         }
-
-                         if($scope.current_state === 'Left' && changed) {
+                     // 현재 Left 인지 Right 인지로 구분해서 하면 되겠구나
+                     if($scope.current_state !== 'Left') {
+                        // Right or None
+                        var left_distance = $analyzer.getSimilarity(left_template, $scope.collection_features);
+                        if(left_distance < 15) {
+                            console.log('Left Gesture');
                             $scope.socket.emit('Rhythm', {state: 'Left', name: my_name});
-                            $scope.sum_magnitude = sum;
+                            $scope.current_state = 'Left';
+                            $scope.guide_message = 'Left';
+                            $scope.left_distance = left_distance;
                             if(my_index == 0)
                                 $scope.origin_information.message = "당신의 제스처 : Left!";
                             else if(my_index == 1)
                                 $scope.user1_information.message = "당신의 제스처 : Left!";
                             else if(my_index == 2)
                                 $scope.user2_information.message = "당신의 제스처 : Left!";
-                         }
-
-                         else if($scope.current_state === 'Right' && changed) {
+                        }
+                     } else if($scope.current_state !== 'Right') {
+                        var right_distance = $analyzer.getSimilarity(right_template, $scope.collection_features);
+                        if(right_distance < 15) {
+                            console.log('Right Gesture');
                             $scope.socket.emit('Rhythm', {state: 'Right', name: my_name});
-                            $scope.state_style = {"background-color":"#394BA0"};
-                            $scope.sum_magnitude = sum;
+                            $scope.current_state = 'Right';
+                            $scope.guide_message = 'Right';
+                            $scope.right_distance = right_distance;
+
                             if(my_index == 0)
                                 $scope.origin_information.message = "당신의 제스처 : Right!";
                             else if(my_index == 1)
                                 $scope.user1_information.message = "당신의 제스처 : Right!";
                             else if(my_index == 2)
                                 $scope.user2_information.message = "당신의 제스처 : Right!";
-                         }
-
-                     } else {
-                        for(k = 0; k < $scope.series_analysis.length; k++) {
-                            $scope.data_analysis[k].push(null);
                         }
                      }
-
-                 } else {
-                    for(k = 0; k < $scope.series_analysis.length; k++) {
-                        $scope.data_analysis[k].push(null);
-                    }
                  }
-                 $scope.labels_analysis.push('-');
               }
 
               // remove gravity
               var alpha = 0.8;
-
               gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
               gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
               gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
-
-
-              $scope.data[0].push(result.x - gravity[0]);
-              $scope.data[1].push(result.y - gravity[1]);
-              $scope.data[2].push(result.z - gravity[2]);
-              $scope.labels.push('-');
-              $scope.timestamp.push(result.timestamp);
 
               // normalize and make collection_features
               var frame_feature = [];
@@ -1453,17 +1309,15 @@ angular.module('starter.controllers', [])
               $scope.collection_features.push(frame_feature);
               $scope.collection_feature_magnitudes.push(magnitude);
 
-              $scope.analysis_index++;
-
           }, function(err) {
             // An error occurred. Show a message to the user
+
           });
         }, 25);
-
     };
 
+    // Stop Collection
     $scope.stopCollection = function() {
-
         if (angular.isDefined(stop)) {
           $interval.cancel(stop);
           stop = undefined;
@@ -1471,14 +1325,7 @@ angular.module('starter.controllers', [])
           $scope.isCollecting = false;
           $scope.recording_message = "";
         }
-
     };
-
-    $scope.goHome = function() {
-       $scope.stopCollection();
-       $state.go('home');
-    };
-
 
     $scope.emitLeft = function() {
         $scope.socket.emit('Rhythm', {state: 'Left', name: my_name});
@@ -1486,6 +1333,11 @@ angular.module('starter.controllers', [])
 
     $scope.emitRight = function() {
         $scope.socket.emit('Rhythm', {state: 'Right', name: my_name});
+    };
+
+    $scope.goHome = function() {
+       $scope.stopCollection();
+       $state.go('home');
     };
 
     $scope.onExit = function() {
@@ -1497,7 +1349,7 @@ angular.module('starter.controllers', [])
 })
 
 
-.controller('loginCtrl', function($scope, $state, $localstorage) {
+.controller('loginCtrl', function($scope, $state, $localstorage, $analyzer) {
     console.log('loginCtrl');
 
     $scope.startOrigin = function() {
@@ -1520,5 +1372,317 @@ angular.module('starter.controllers', [])
 .controller('endCtrl', function($scope) {
     console.log('endCtrl');
 
+})
+
+.controller('trainCtrl', function($scope, $interval, $cordovaDeviceMotion, $localstorage, $analyzer, $cordovaMedia, $state) {
+    console.log('trainCtrl');
+    $scope.guide_message = "Training을 시작해 주세요.";
+
+    // Sound Play test
+
+
+
+    $scope.left_button_activate = true;
+    $scope.right_button_activate = true;
+
+    if(Object.keys($localstorage.getLeftTemplate()).length == 0)
+        $scope.left_status = false;
+    else
+        $scope.left_status = true;
+
+    // right template
+    if(Object.keys($localstorage.getRightTemplate()).length == 0)
+        $scope.right_status = false;
+    else
+        $scope.right_status = true;
+
+    $scope.testing = false;
+
+    $scope.leftTrain = function() {
+        console.log('start to train a left gesture');
+        if (stop === undefined) {
+            $scope.startCollection('Left');
+        }
+    };
+
+    $scope.rightTrain = function() {
+        console.log('start to train a right gesture');
+        if (stop === undefined) {
+            $scope.startCollection('Right');
+        }
+    };
+
+    var stop = undefined;
+
+    $scope.startCollection = function(gesture) {
+        $scope.stopCollection();
+        $scope.guide_message = "기다려주세요";
+
+        // Data set
+        var recorded_data = [
+            [], // For_X
+            [], // For_Y
+            [] // For_Z
+        ];
+        var magnitude_array = [];
+
+        // Status Variables
+        var isRecording = false;
+        var isStable = false;
+
+        // start collection...
+        var gravity = [0, 0, 0];
+        stop = $interval(function() {
+          // get accelerometer data
+          $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
+
+              // remove gravity
+              var alpha = 0.8;
+
+              gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
+              gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
+              gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
+
+              var x = result.x - gravity[0];
+              var y = result.y - gravity[1];
+              var z = result.z - gravity[2];
+              var magnitude = Math.sqrt(x * x + y * y + z * z);
+
+              // add magnitude value to magnitude array
+              magnitude_array.push(magnitude);
+
+              var avg = 10000;  // Quite Large AVG
+              if(magnitude_array.length > 5) { // 5는 magnitude average 의 크기
+                var sum = 0;
+                for(var i = 0; i < magnitude_array.length; i++)
+                    sum += magnitude_array[i];
+                avg = sum / magnitude_array.length;
+                magnitude_array.shift();
+              }
+
+              if(isRecording === false && isStable === false) { // before stable
+                if(avg < 0.5) { // stable
+                    isStable = true;
+                    $scope.guide_message = "제스처를 시작해주세요";
+                }
+              } else if(isRecording === false && isStable === true) { // After stable
+                if(avg > 1.5) { // moving
+                    isRecording = true;
+                    $scope.guide_message = "제스처 수집중";
+                }
+              } else if(isRecording === true && isStable === true) {  // During Recording
+                if(avg < 1 && recorded_data[0].length > 10) {
+                    $scope.stopCollection();
+                    $scope.guide_message = "제스처 수집 종료";
+                    if(gesture === 'Left') {
+                        var left_template = [];
+                        for(var j = 0; j < recorded_data[0].length; j++) {
+                            var left_feature = [];
+                            var left_magnitude = Math.sqrt(recorded_data[0][j] * recorded_data[0][j] + recorded_data[1][j] * recorded_data[1][j] + recorded_data[2][j] * recorded_data[2][j]);
+                            left_feature.push(recorded_data[0][j] / left_magnitude); // x
+                            left_feature.push(recorded_data[1][j] / left_magnitude); // y
+                            left_feature.push(recorded_data[2][j] / left_magnitude); // z
+                            left_template.push(left_feature);
+                        }
+                        $localstorage.setLeftTemplate({left:left_template});
+                        $scope.left_status = true;
+                    } else if(gesture === 'Right') {
+                        var right_template = [];
+                        for(var k = 0; k < recorded_data[0].length; k++) {
+                            var right_feature = [];
+                            var right_magnitude = Math.sqrt(recorded_data[0][k] * recorded_data[0][k] + recorded_data[1][k] * recorded_data[1][k] + recorded_data[2][k] * recorded_data[2][k]);
+                            right_feature.push(recorded_data[0][k] / right_magnitude); // x
+                            right_feature.push(recorded_data[1][k] / right_magnitude); // y
+                            right_feature.push(recorded_data[2][k] / right_magnitude); // z
+                            right_template.push(right_feature);
+                        }
+                        $localstorage.setRightTemplate({right:right_template});
+                        $scope.right_status = true;
+                    }
+                } else {
+                    recorded_data[0].push(x);
+                    recorded_data[1].push(y);
+                    recorded_data[2].push(z);
+                }
+              }
+
+          }, function(err) {
+            // An error occurred. Show a message to the user
+          });
+        }, 25);
+    };
+
+    $scope.startTest = function() {
+
+        if ( angular.isDefined(stop) ) return;
+        console.log('started to test gesture');
+
+        //
+        $scope.testing = true;
+        $scope.left_button_activate = false;
+        $scope.right_button_activate = false;
+
+        // initialize raw mode
+        $scope.collection_features = [];
+        $scope.collection_feature_magnitudes = [];
+        $scope.analysis_index = 0;
+
+        $scope.current_state = "Non";
+
+        // get templates from local storage
+
+        var left_template = $localstorage.getLeftTemplate()["left"];
+        var right_template = $localstorage.getRightTemplate()["right"];
+        console.log('Left Length : ' + left_template.length);
+        console.log('Right Length : ' + right_template.length);
+        var frame_size = Math.min(left_template.length, right_template.length); // 이거 어떻게 정해야하는지 고민되는 구만
+
+        $scope.left_distance = 0;
+        $scope.right_distance = 0;
+
+        // sound
+        //var background_src = "/audio/background.mp3";
+        //var background_media = $cordovaMedia.newMedia(background_src);
+        //background_media.play();
+
+        var left_src = "/audio/Left.mp3";
+        var left_media = $cordovaMedia.newMedia(left_src);
+        left_media.setVolume(0.5);
+
+        var right_src = "/audio/Right.mp3";
+        var right_media = $cordovaMedia.newMedia(right_src);
+        right_media.setVolume(0.5);
+
+        // start collecting
+        var gravity = [0, 0, 0];
+        stop = $interval(function() {
+          // get accelerometer data
+          $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
+
+              $scope.analysis_index++;
+
+              // calculate similarity
+              if($scope.collection_features.length > frame_size) {
+                 $scope.collection_features.shift();
+                 $scope.collection_feature_magnitudes.shift();
+
+                 // calculate average magnitude
+                 var sum = 0;
+                 for(var i = $scope.collection_feature_magnitudes.length - 5; i < $scope.collection_feature_magnitudes.length; i++)
+                    sum += $scope.collection_feature_magnitudes[i];
+                 $scope.avg_magnitude = sum / $scope.collection_feature_magnitudes.length;
+
+                 if($scope.analysis_index % 2 == 0) {
+                     // 현재 Left 인지 Right 인지로 구분해서 하면 되겠구나
+                     if($scope.current_state !== 'Left') {
+                        // Right or None
+                        var left_distance = $analyzer.getSimilarity(left_template, $scope.collection_features);
+                        if(left_distance < 15) {
+                            console.log('Left Gesture');
+                            $scope.current_state = 'Left';
+                            $scope.guide_message = 'Left';
+                            $scope.left_distance = left_distance;
+                            // 소리 Play
+                            //background_media.pause();
+                            left_media.play();
+                            //setTimeout(function(){ left_media.stop(); background_media.play(); }, 1000);
+                        }
+                     } else if($scope.current_state !== 'Right') {
+                        var right_distance = $analyzer.getSimilarity(right_template, $scope.collection_features);
+                        if(right_distance < 15) {
+                            console.log('Right Gesture');
+                            $scope.current_state = 'Right';
+                            $scope.guide_message = 'Right';
+                            $scope.right_distance = right_distance;
+                            // 소리 Play
+                            //background_media.pause();
+                            right_media.play();
+                            //setTimeout(function(){ right_media.stop(); background_media.play(); }, 1000);
+                        }
+                     }
+                 }
+              }
+
+              // remove gravity
+              var alpha = 0.8;
+              gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
+              gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
+              gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
+
+              // normalize and make collection_features
+              var frame_feature = [];
+              var magnitude = Math.sqrt((result.x - gravity[0]) * (result.x - gravity[0]) + (result.y - gravity[1]) * (result.y - gravity[1]) + (result.z - gravity[2]) * (result.z - gravity[2]));
+              frame_feature.push((result.x - gravity[0]) / magnitude);
+              frame_feature.push((result.y - gravity[1]) / magnitude);
+              frame_feature.push((result.z - gravity[2]) / magnitude);
+              $scope.collection_features.push(frame_feature);
+              $scope.collection_feature_magnitudes.push(magnitude);
+
+          }, function(err) {
+            // An error occurred. Show a message to the user
+
+          });
+        }, 25);
+
+    };
+
+    $scope.stopCollection = function() {
+
+        if (angular.isDefined(stop)) {
+          $interval.cancel(stop);
+          stop = undefined;
+          $scope.testing = false;
+          $scope.left_button_activate = true;
+          $scope.right_button_activate = true;
+        }
+
+    };
+
+    $scope.imready = function() {
+        console.log("I'm Ready");
+        $state.go('login');
+    };
+
+})
+
+.controller('soundCtrl', function($scope, $cordovaNativeAudio, $timeout) {
+
+    $cordovaNativeAudio
+    .preloadComplex('music', '/audio/ambient.mp3',1,1)
+    .then(function (msg) {
+      console.log(msg);
+    }, function (error) {
+      console.error(error);
+    });
+
+    $scope.startBackground = function () {
+        console.log('start background music');
+        $cordovaNativeAudio.loop('music');
+    };
+
+    $scope.stopBackground = function () {
+        console.log('stop background music');
+        $cordovaNativeAudio.stop('music');
+        $cordovaNativeAudio.stop('effect');
+    };
+
+    $cordovaNativeAudio
+    .preloadSimple('effect', '/audio/snare.mp3')
+    .then(function (msg) {
+      console.log(msg);
+    }, function (error) {
+      console.error(error);
+    });
+
+    $scope.startEffect = function() {
+        console.log('start effect sound');
+        $cordovaNativeAudio.play('effect', new function(msg) {console.log(msg)});
+
+
+
+    };
+
 });
+
+
 

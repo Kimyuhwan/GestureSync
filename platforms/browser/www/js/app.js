@@ -25,19 +25,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 
     document.addEventListener("pause", function() {
         console.log("The application is paused");
-        //$rootScope.$apply(function() {
-        //    $rootScope.eventHappen = true;
-        //    $rootScope.eventName = "pause";
-        //});
-
+        $rootScope.$apply(function() {
+            $rootScope.eventHappen = "pause";
+        });
     }, false);
 
     document.addEventListener("resume", function() {
         console.log("The application is resuming");
-        //$rootScope.$apply(function() {
-        //    $rootScope.eventHappen = true;
-        //    $rootScope.eventName = "resume";
-        //});
+        $rootScope.$apply(function() {
+            $rootScope.eventHappen = "resume";
+        });
     }, false);
 
   });
@@ -77,10 +74,34 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     url: '/login',
     templateUrl: 'templates/login.html',
     controller: 'loginCtrl'
-  });
+  })
+
+  .state('oz', {
+    url: '/oz',
+    templateUrl: 'templates/oz.html',
+    controller: 'ozCtrl'
+  })
+
+  .state('end', {
+    url: '/end',
+    templateUrl: 'templates/end.html',
+    controller: 'endCtrl'
+  })
+
+  .state('train', {
+    url: '/train',
+    templateUrl: 'templates/train.html',
+    controller: 'trainCtrl'
+  })
+
+      .state('sound', {
+        url: '/soundtest',
+        templateUrl: 'templates/soundtest',
+        controller: 'soundCtrl'
+      });
 
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/login');
+  $urlRouterProvider.otherwise('/soundtest');
 
 });

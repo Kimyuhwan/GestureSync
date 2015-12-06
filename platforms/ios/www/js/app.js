@@ -7,7 +7,7 @@
 // 'starter.controllers' is found in controllers.js
 angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngMaterial', 'ngCordova', 'chart.js','btford.socket-io'])
 
-.run(function($ionicPlatform, $rootScope) {
+.run(function($ionicPlatform, $rootScope, $location) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -36,6 +36,9 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             $rootScope.eventHappen = "resume";
         });
     }, false);
+
+    $location.path('/soundtest');
+    $rootScope.$apply();
 
   });
 
@@ -86,10 +89,22 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     url: '/end',
     templateUrl: 'templates/end.html',
     controller: 'endCtrl'
+  })
+
+  .state('train', {
+    url: '/train',
+    templateUrl: 'templates/train.html',
+    controller: 'trainCtrl'
+  })
+
+  .state('soundtest', {
+    url: '/soundtest',
+    templateUrl: 'templates/soundtest.html',
+    controller: 'soundCtrl'
   });
 
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/login');
+  $urlRouterProvider.otherwise('/index');
 
 });
