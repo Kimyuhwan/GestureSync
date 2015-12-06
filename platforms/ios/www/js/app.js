@@ -37,7 +37,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         });
     }, false);
 
-    $location.path('/soundtest');
+    $location.path('/login');
     $rootScope.$apply();
 
   });
@@ -75,7 +75,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 
   .state('login', {
     url: '/login',
-    templateUrl: 'templates/login.html',
+    templateUrl: 'templates/_login.html',
     controller: 'loginCtrl'
   })
 
@@ -93,7 +93,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 
   .state('train', {
     url: '/train',
-    templateUrl: 'templates/train.html',
+    templateUrl: 'templates/_train.html',
     controller: 'trainCtrl'
   })
 
