@@ -18,8 +18,7 @@ angular.module('starter.controllers', [])
     /* Train Controller: 게임에 사용될 제스처들을 트레이닝하는 화면 */
     console.log('Start: Train Controller');
 
-    $scope.guide_message = "트레이닝을 시작해 주세요.";
-
+    $scope.guide_message = "트레이닝을 시작해주세요.";
     $scope.left_button_activate = true;
     $scope.right_button_activate = true;
 
@@ -51,7 +50,6 @@ angular.module('starter.controllers', [])
     };
 
     var stop = undefined;
-
     $scope.startCollection = function(gesture) {
         $scope.stopCollection();
         $scope.guide_message = "기다려주세요";
@@ -178,11 +176,6 @@ angular.module('starter.controllers', [])
         $scope.left_distance = 0;
         $scope.right_distance = 0;
 
-        // sound
-        //var background_src = "/audio/background.mp3";
-        //var background_media = $cordovaMedia.newMedia(background_src);
-        //background_media.play();
-
         var left_src = "/audio/Left.mp3";
         var left_media = $cordovaMedia.newMedia(left_src);
         left_media.setVolume(0.5);
@@ -261,7 +254,6 @@ angular.module('starter.controllers', [])
 
           });
         }, 25);
-
     };
 
     $scope.stopCollection = function() {
@@ -282,8 +274,6 @@ angular.module('starter.controllers', [])
     };
 
 })
-
-
 
 
 .controller('homeCtrl', function($scope, $cordovaDeviceMotion, $interval, $state, $analyzer, $communication, $ionicPopup) {
@@ -1942,9 +1932,6 @@ angular.module('starter.controllers', [])
     $scope.startEffect = function() {
         console.log('start effect sound');
         $cordovaNativeAudio.play('effect', new function(msg) {console.log(msg)});
-
-
-
     };
 
 });

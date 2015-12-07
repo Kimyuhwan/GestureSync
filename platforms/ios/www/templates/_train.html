@@ -1,49 +1,86 @@
 <ion-view>
 
-    <md-content layout-fill layout="column" layout-align="center center">
+    <md-content layout-fill layout="column" layout-align="center start">
 
-        <div class="col-sm-6" style="font-size: 25px;">
-            <p class="lead">{{guide_message}}</p>
-        </div>
-
-        <br/>
-
-        <div class="col-sm-6">
-            Testing : {{testing}}
-        </div>
-
-        <br/>
-
-        <div class="col-sm-6" ng-show="testing">
-
-            <p>
-                Left Distance : {{left_distance}} <br/>
-                Right Distance : {{right_distance}}
-            </p>
-
-        </div>
-
-        <br/><br/>
-
-        <div layout="row" layout-align="center center">
-            <md-button class="md-raised" ng-click="leftTrain()" ng-disabled="!left_button_activate">Left</md-button> &nbsp; training : {{left_status}}
-        </div>
-        <div layout="row" layout-align="center center">
-            <md-button class="md-raised" ng-click="rightTrain()" ng-disabled="!right_button_activate">Right</md-button> &nbsp; training : {{right_status}}
-        </div>
-
-        <div class="tabs no-border no-padding" layout="column" layout-align="center center" style="height:auto; background-color: transparent; background-image: none;">
-
-            <div layout="row" layout-align="center center" style="padding-bottom: 10px;">
-
-                <md-button class="md-primary md-raised" ng-click="startTest()">Test Gesture</md-button>
-                <md-button class="md-primary md-raised" ng-click="stopCollection()">Stop Test</md-button>
-                <md-button class="md-accent md-raised" ng-disabled="!left_status && !right_status" ng-click="imready()">I'm Ready</md-button>
-
+        <div layout="column" layout-wrap>
+            <div layout="row" style="padding-left: 30px;" layout-align="start center">
+                <img style="width: 50px" src="img/cruise.png"/>
+                <b style="padding-left: 7px;"> 배모양 제스처 </b>
+                &nbsp;&nbsp;&nbsp;
+                <md-checkbox ng-model="data.cb1" aria-label="ship">
+                  트레이닝 완료
+                </md-checkbox>
+            </div>
+            <div layout="row" style="padding-left: 15px; padding-right: 15px; padding-top:5px; padding-bottom: 5px;" layout-align="center center">
+                <p>
+                    세월호를 배가 물위를 떠다니는 모습을 형상화. <br/>핸드폰을 손에 들고 좌우로 움직이는 제스처입니다.
+                </p>
             </div>
 
+            <div layout="row" layout-fill layout-align="center center">
+                <md-button class="md-raised" ng-click="leftTrain()">왼쪽</md-button>
+                <md-button class="md-raised" ng-click="rightTrain()">오른쪽</md-button>
+                <md-button class="md-raised md-primary" ng-disabled="true" ng-click="rightTrain()">테스트</md-button>
+            </div>
         </div>
 
+        <hr>
+
+        <div layout="column" layout-wrap>
+            <div layout="row" style="padding-left: 30px;" layout-align="start center">
+                <img style="width: 50px" src="img/hug.png"/>
+                <b style="padding-left: 7px;"> 포옹 제스처 </b>
+                &nbsp;&nbsp;&nbsp;
+                <md-checkbox ng-model="data.cb1" aria-label="hug">
+                  트레이닝 완료
+                </md-checkbox>
+            </div>
+            <div layout="row" style="padding-left: 15px; padding-right: 15px; padding-top:10px; padding-bottom: 5px;" layout-align="center center">
+                <p>
+                    세월호 희생자들을 안아주는 것을 형상화. <br/>핸드폰을 가슴 위에 대고 앞뒤로 움직이는 제스처입니다.
+                </p>
+            </div>
+
+            <div layout="row" layout-fill layout-align="center center">
+                <md-button class="md-raised" ng-click="leftTrain()">앞으로</md-button>
+                <md-button class="md-raised" ng-click="rightTrain()">뒤로</md-button>
+                <md-button class="md-raised md-primary" ng-click="rightTrain()" ng-disabled="true">테스트</md-button>
+            </div>
+        </div>
+
+        <hr>
+
+        <div layout="column" layout-wrap>
+            <div layout="row" style="padding-left: 30px;" layout-align="start center">
+                <img style="width: 50px" src="img/fist.png"/>
+                <b style="padding-left: 7px;"> 의지 제스처 </b>
+                &nbsp;&nbsp;&nbsp;
+                <md-checkbox ng-model="data.cb1" aria-label="fist">
+                  트레이닝 완료
+                </md-checkbox>
+            </div>
+            <div layout="row" style="padding-left: 15px; padding-right: 15px; padding-top:5px; padding-bottom: 5px;" layout-align="center center">
+                <p>
+                    세월호 참사를 기억하겠다는 의지를 형상화. <br/>핸드폰을 손에 들고 위아래로 움직이는 제스처입니다.
+                </p>
+            </div>
+
+            <div layout="row" layout-fill layout-align="center center">
+                <md-button class="md-raised" ng-click="leftTrain()">위로</md-button>
+                <md-button class="md-raised" ng-click="rightTrain()">아래로</md-button>
+                <md-button class="md-raised md-primary" ng-click="rightTrain()" ng-disabled="true">테스트</md-button>
+            </div>
+        </div>
+
+        <br/>
+        <br/>
+
     </md-content>
+
+    <div class="tabs no-border no-padding" style="height:auto; background-color: transparent; background-image: none; border-style: solid">
+        <section layout="row" layout-align="center center" style="padding-bottom: 8px;">
+            <md-button flex class="md-accent md-raised" style="width:100%">준비 완료</md-button>
+        </section>
+   </div>
 
 </ion-view>

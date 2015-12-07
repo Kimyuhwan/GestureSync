@@ -7,7 +7,7 @@
 // 'starter.controllers' is found in controllers.js
 angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngMaterial', 'ngCordova', 'chart.js','btford.socket-io'])
 
-.run(function($ionicPlatform, $rootScope) {
+.run(function($ionicPlatform, $rootScope, $location) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -20,8 +20,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
       // org.apache.cordova.statusbar required
       StatusBar.styleLightContent();
     }
-
-    screen.unlockOrientation();
 
     document.addEventListener("pause", function() {
         console.log("The application is paused");
@@ -37,6 +35,9 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         });
     }, false);
 
+    $location.path('/train');
+    $rootScope.$apply();
+
   });
 
 
@@ -50,58 +51,57 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
   // Each state's controller can be found in controllers.js
   $stateProvider
 
-  // setup an abstract state for the tabs directive
-    .state('home', {
-    url: '/home',
-    templateUrl: 'templates/home.html',
-    controller: 'homeCtrl'
-  })
-
-  .state('analysis', {
-    url: '/analysis',
-    params: {raw_data: null},
-    templateUrl: 'templates/analysis.html',
-    controller: 'analysisCtrl'
-  })
-
-  .state('demo', {
-    url: '/demo',
-    templateUrl: 'templates/demo.html',
-    controller: 'demoCtrl'
-  })
-
   .state('login', {
     url: '/login',
-    templateUrl: 'templates/login.html',
+    templateUrl: 'templates/_login.html',
     controller: 'loginCtrl'
-  })
-
-  .state('oz', {
-    url: '/oz',
-    templateUrl: 'templates/oz.html',
-    controller: 'ozCtrl'
-  })
-
-  .state('end', {
-    url: '/end',
-    templateUrl: 'templates/end.html',
-    controller: 'endCtrl'
   })
 
   .state('train', {
     url: '/train',
-    templateUrl: 'templates/train.html',
+    templateUrl: 'templates/_train.html',
     controller: 'trainCtrl'
-  })
+  });
 
-      .state('sound', {
-        url: '/soundtest',
-        templateUrl: 'templates/soundtest',
-        controller: 'soundCtrl'
-      });
+  //.state('home', {
+  //  url: '/home',
+  //  templateUrl: 'templates/home.html',
+  //  controller: 'homeCtrl'
+  //})
+  //
+  //.state('analysis', {
+  //  url: '/analysis',
+  //  params: {raw_data: null},
+  //  templateUrl: 'templates/analysis.html',
+  //  controller: 'analysisCtrl'
+  //})
+  //
+  //.state('demo', {
+  //  url: '/demo',
+  //  templateUrl: 'templates/demo.html',
+  //  controller: 'demoCtrl'
+  //})
+  //
+  //.state('oz', {
+  //  url: '/oz',
+  //  templateUrl: 'templates/oz.html',
+  //  controller: 'ozCtrl'
+  //})
+  //
+  //.state('end', {
+  //  url: '/end',
+  //  templateUrl: 'templates/end.html',
+  //  controller: 'endCtrl'
+  //})
+  //
+  //.state('soundtest', {
+  //  url: '/soundtest',
+  //  templateUrl: 'templates/soundtest.html',
+  //  controller: 'soundCtrl'
+  //});
 
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/soundtest');
+  $urlRouterProvider.otherwise('/train');
 
 });
