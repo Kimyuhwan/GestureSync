@@ -18,9 +18,9 @@
             </div>
 
             <div layout="row" layout-fill layout-align="center center">
-                <md-button class="md-raised" ng-click="leftTrain()">왼쪽</md-button>
-                <md-button class="md-raised" ng-click="rightTrain()">오른쪽</md-button>
-                <md-button class="md-raised md-primary" ng-disabled="true" ng-click="rightTrain()">테스트</md-button>
+                <md-button class="md-raised" ng-click="trainSubgesture('Left')">왼쪽</md-button>
+                <md-button class="md-raised" ng-click="trainSubgesture('Right')">오른쪽</md-button>
+                <md-button class="md-raised md-primary" ng-disabled="false" ng-click="startTest('ship')">테스트</md-button>
             </div>
         </div>
 
@@ -42,9 +42,9 @@
             </div>
 
             <div layout="row" layout-fill layout-align="center center">
-                <md-button class="md-raised" ng-click="leftTrain()">앞으로</md-button>
-                <md-button class="md-raised" ng-click="rightTrain()">뒤로</md-button>
-                <md-button class="md-raised md-primary" ng-click="rightTrain()" ng-disabled="true">테스트</md-button>
+                <md-button class="md-raised" ng-click="trainSubgesture('Forward')">앞으로</md-button>
+                <md-button class="md-raised" ng-click="trainSubgesture('Backward')">뒤로</md-button>
+                <md-button class="md-raised md-primary" ng-click="startTest('hug')" ng-disabled="true">테스트</md-button>
             </div>
         </div>
 
@@ -66,9 +66,9 @@
             </div>
 
             <div layout="row" layout-fill layout-align="center center">
-                <md-button class="md-raised" ng-click="leftTrain()">위로</md-button>
-                <md-button class="md-raised" ng-click="rightTrain()">아래로</md-button>
-                <md-button class="md-raised md-primary" ng-click="rightTrain()" ng-disabled="true">테스트</md-button>
+                <md-button class="md-raised" ng-click="trainSubgesture('Up')">위로</md-button>
+                <md-button class="md-raised" ng-click="trainSubgesture('Down')">아래로</md-button>
+                <md-button class="md-raised md-primary" ng-click="startTest('fist')" ng-disabled="true">테스트</md-button>
             </div>
         </div>
 
@@ -79,7 +79,7 @@
 
     <div class="tabs no-border no-padding" style="height:auto; background-color: transparent; background-image: none; border-style: solid">
         <section layout="row" layout-align="center center" style="padding-bottom: 8px;">
-            <md-button flex class="md-accent md-raised" style="width:100%">준비 완료</md-button>
+            <md-button flex class="md-accent md-raised" style="width:100%" >준비 완료</md-button>
         </section>
    </div>
 
