@@ -7,7 +7,7 @@
 // 'starter.controllers' is found in controllers.js
 angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngMaterial', 'ngCordova', 'chart.js','btford.socket-io'])
 
-.run(function($ionicPlatform, $rootScope, $location) {
+.run(function($ionicPlatform, $rootScope, $state, $cordovaNativeAudio) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -35,8 +35,32 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         });
     }, false);
 
-    $location.path('/train');
-    $rootScope.$apply();
+    // load sound cue
+    $cordovaNativeAudio
+    .preloadSimple('effect_one', '/audio/bass.mp3')
+    .then(function (msg) {
+      console.log(msg);
+    }, function (error) {
+      console.error(error);
+    });
+
+    $cordovaNativeAudio
+    .preloadSimple('effect_two', '/audio/highhat.mp3')
+    .then(function (msg) {
+      console.log(msg);
+    }, function (error) {
+      console.error(error);
+    });
+
+    $cordovaNativeAudio
+    .preloadComplex('music', '/audio/background.mp3',1,1)
+    .then(function (msg) {
+      console.log(msg);
+    }, function (error) {
+      console.error(error);
+    });
+
+    $state.go('gesture');
 
   });
 
@@ -57,17 +81,32 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     controller: 'loginCtrl'
   })
 
-  .state('train', {
-    url: '/train',
-    templateUrl: 'templates/_train.html',
-    controller: 'trainCtrl'
+
+  .state('gesture', {
+    url: '/gesture',
+    templateUrl: 'templates/_gesture.html',
+    controller: 'gestureCtrl'
+  })
+
+  .state('game', {
+    url: '/game',
+    templateUrl: 'templates/_game.html',
+    controller: 'gameCtrl'
   });
 
   //.state('home', {
   //  url: '/home',
-  //  templateUrl: 'templates/home.html',
+  //  templateUrl: 'templates/_home.html',
   //  controller: 'homeCtrl'
-  //})
+  //});
+
+  //.state('train', {
+  //  url: '/train',
+  //  templateUrl: 'templates/_train.html',
+  //  controller: 'trainCtrl'
+  //});
+
+
   //
   //.state('analysis', {
   //  url: '/analysis',
@@ -102,6 +141,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/train');
+  $urlRouterProvider.otherwise('/home');
 
 });

@@ -7,7 +7,7 @@
 // 'starter.controllers' is found in controllers.js
 angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngMaterial', 'ngCordova', 'chart.js','btford.socket-io'])
 
-.run(function($ionicPlatform, $rootScope, $location) {
+.run(function($ionicPlatform, $rootScope, $state) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -35,8 +35,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         });
     }, false);
 
-    $location.path('/train');
-    $rootScope.$apply();
+    $state.go('train');
+    //$rootScope.$apply();
 
   });
 
@@ -102,6 +102,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/train');
+  $urlRouterProvider.otherwise('/home');
 
 });

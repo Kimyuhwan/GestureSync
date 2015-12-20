@@ -8,17 +8,11 @@ angular.module('starter.services', [])
             getID: function () {
                 return $window.localStorage['ID']  || null;
             },
-            setLeftTemplate: function(value) {
-                $window.localStorage['Left'] = JSON.stringify(value);
+            setTemplate: function(key, value) {
+                $window.localStorage[key] = JSON.stringify(value);
             },
-            getLeftTemplate: function() {
-                return JSON.parse($window.localStorage['Left'] || '{}');
-            },
-            setRightTemplate: function(value) {
-                $window.localStorage['Right'] = JSON.stringify(value);
-            },
-            getRightTemplate: function() {
-                return JSON.parse($window.localStorage['Right'] || '{}');
+            getTemplate: function(key) {
+                return JSON.parse($window.localStorage[key] || '{}');
             }
         }
     }

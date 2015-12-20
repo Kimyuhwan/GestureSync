@@ -1,0 +1,90 @@
+<ion-view>
+
+    <md-content layout-fill layout="column" layout-align="center start">
+
+        <div layout="column" layout-fill style="padding-bottom: 10px;">
+            <h3 class="md-title" style="padding-left: 30px;"> 트레이닝 정보</h3>
+            <div layout="row" layout-fill layout-align="center center">
+                <md-checkbox ng-disabled="true" ng-model="data.ship" aria-label="ship">배모양</md-checkbox>
+                <md-checkbox ng-disabled="true" ng-model="data.hug" aria-label="hug">포옹</md-checkbox>
+                <md-checkbox ng-disabled="true" ng-model="data.fist" aria-label="fist">다짐</md-checkbox>
+            </div>
+            <div layout="row" layout-fill layout-align="center center">
+                <p class="md-caption"> (트레이닝이 되면 체크박스가 자동으로 채워집니다)</p>
+            </div>
+        </div>
+
+        <br/>
+
+        <div layout="column" layout-wrap>
+            <div layout="row" style="padding-bottom: 2px;">
+                <h3 style="padding-left: 30px;" class="md-title"> 제스처 정보 </h3>
+            </div>
+            <div layout="row">
+                <div layout="row" flex style="padding-left: 30px;" layout-align="start center">
+                    <img style="width: 50px" src="img/cruise.png"/>
+                    <b style="padding-left: 7px;"> 배모양 제스처 </b>
+                </div>
+                <div layout="row" flex layout-align="end center" style="padding-right: 30px">
+                    <md-button class="md-raised" ng-click="showTrainDialog('ship')"> 트레이닝 시작</md-button>
+                </div>
+            </div>
+            <div layout="row" style="padding-left: 15px; padding-right: 15px; padding-top:5px; padding-bottom: 5px;" layout-align="center center">
+                <p>
+                    세월호를 배가 물위를 떠다니는 모습을 형상화. <br/>핸드폰을 손에 들고 좌우로 움직이는 제스처입니다.
+                </p>
+            </div>
+
+        </div>
+
+        <hr>
+
+        <div layout="column" layout-wrap>
+            <div layout="row">
+                <div layout="row" flex style="padding-left: 30px;" layout-align="start center">
+                    <img style="width: 50px" src="img/hug.png"/>
+                    <b style="padding-left: 7px;"> 포옹 제스처 </b>
+                </div>
+                <div layout="row" flex layout-align="end center" style="padding-right: 30px">
+                    <md-button class="md-raised"> 트레이닝 시작</md-button>
+                </div>
+            </div>
+            <div layout="row" style="padding-left: 15px; padding-right: 15px; padding-top:10px; padding-bottom: 5px;" layout-align="center center">
+                <p>
+                    세월호 희생자들을 안아주는 것을 형상화. <br/>핸드폰을 가슴 위에 대고 앞뒤로 움직이는 제스처입니다.
+                </p>
+            </div>
+
+        </div>
+
+        <hr>
+
+        <div layout="column" layout-wrap>
+            <div layout="row">
+                <div layout="row" flex style="padding-left: 30px;" layout-align="start center">
+                    <img style="width: 50px" src="img/fist.png"/>
+                    <b style="padding-left: 7px;"> 다짐 제스처 </b>
+                </div>
+                <div layout="row" flex layout-align="end center" style="padding-right: 30px">
+                    <md-button class="md-raised"> 트레이닝 시작</md-button>
+                </div>
+            </div>
+            <div layout="row" style="padding-left: 15px; padding-right: 15px; padding-top:5px; padding-bottom: 5px;" layout-align="center center">
+                <p>
+                    세월호 참사를 기억하겠다는 다짐을 형상화. <br/>핸드폰을 손에 들고 위아래로 움직이는 제스처입니다.
+                </p>
+            </div>
+        </div>
+
+        <br/>
+
+
+    </md-content>
+
+    <div class="tabs no-border no-padding" style="height:auto; background-color: transparent; background-image: none; border-style: solid">
+        <section layout="row" layout-align="center center" layout-fill style="padding-bottom: 8px;">
+            <md-button flex class="md-accent md-raised" md-ripple-size="full" ng-disabled="true" >준비 완료</md-button>
+        </section>
+   </div>
+
+</ion-view>

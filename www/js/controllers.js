@@ -14,239 +14,464 @@ angular.module('starter.controllers', [])
     };
 })
 
-.controller('trainCtrl', function($scope, $interval, $cordovaDeviceMotion, $localstorage, $analyzer, $cordovaMedia, $state) {
-    /* Train Controller: 게임에 사용될 제스처들을 트레이닝하는 화면 */
-    console.log('Start: Train Controller');
+.controller('gestureCtrl', function($scope, $mdDialog, $localstorage, $state){
+    /* 제스처에 대한 설명을 하고 각 제스처를 트레이닝 할 수 있는 화면 */
+    console.log('Start: Gesture Ctrl');
 
-    var subgestureList = ['Left','Right','Forward','Backward','Up','Down'];
-    var gestureList = {ship: ['Left', 'Right'], hug: ['Forward','Backward'], fist: ['Up', 'Down']};
+    $scope.checkbox_data = {ship: false, hug: false, fist: false};
 
-    $scope.trainSubgesture = function(subgesture_name) {
-        // train a gesture
-        console.log('Function: trainGesture of ' + subgesture_name);
+    // initialize checkbox
+    var left = $localstorage.getTemplate('Left');
+    var right = $localstorage.getTemplate('Right');
+    var forward = $localstorage.getTemplate('Forward');
+    var backward = $localstorage.getTemplate('Backward');
+    var up = $localstorage.getTemplate('Up');
+    var down = $localstorage.getTemplate('Down');
+    if(!isEmpty(left) && !isEmpty(right)) {
+        console.log('Ship gesture has trained already');
+        $scope.checkbox_data['ship'] = true;
+    }
+    if(!isEmpty(forward) && !isEmpty(backward)) {
+        console.log('Hug gesture has trained already');
+        $scope.checkbox_data['hug'] = true;
+    }
+    if(!isEmpty(up) && !isEmpty(down)) {
+        console.log('Fist gesture has trained already');
+        $scope.checkbox_data['fist'] = true;
+    }
+    function isEmpty(obj) {
+      return Object.keys(obj).length === 0;
+    }
 
-        // check if gesture name is valid
-        if(subgestureList.indexOf(subgesture_name)==-1) {
-            console.log('Err: ' + subgesture_name + ' is invalid gesture');
-        } else {
-            $scope.startCollection(subgesture_name);
-        }
+    // show dialog
+    $scope.showTrainDialog = function(gesture) {
+        console.log('Function: showTrainDialog for ' + gesture);
+
+        // gesture_가 붙은 것은 gesture template
+        $scope.gesture_name = gesture;
+
+        $mdDialog.show({
+          controller: trainController,
+          templateUrl: 'templates/_train.html',
+          parent: angular.element(document.body),
+          clickOutsideToClose:true,
+          scope: $scope,
+          preserveScope: true
+        })
+        .then(function(answer) {
+          console.log(answer);
+        }, function() {
+          console.log('cancelled');
+        });
+
     };
 
-    var stop = undefined;
-    $scope.startCollection = function(subgesture) {
-        // collect data for a subgesture
-        console.log('Function: startCollection of ' + subgesture);
-        $scope.stopCollection();
+    $scope.ImReady = function() {
+        console.log('Function: ImReady');
+        $state.go('game');
+    };
 
-        // Data set
-        var recorded_data = [
-            [], // For_X
-            [], // For_Y
-            [] // For_Z
-        ];
-        var magnitude_array = [];
+    function trainController($scope, $mdDialog, $interval, $cordovaDeviceMotion, $analyzer, $cordovaNativeAudio, $localstorage) {
+        /* 제스처를 트레이닝하는 다이얼로그 */
+        console.log('Start: Train Controller');
 
-        // Status Variables
-        var isRecording = false;
-        var isStable = false;
+        // setting information
+        var train_information = {
+            ship: {train_title: '배모양', train_image_path: 'img/cruise.png', train_subone_title: '왼방향', train_subtwo_title: '오른방향', train_subone_name: 'Left', train_subtwo_name: 'Right'},
+            hug: {train_title: '포옹', train_image_path: 'img/hug.png', train_subone_title: '앞방향', train_subtwo_title: '뒷방향', train_subone_name: 'Forward', train_subtwo_name: 'Backward'},
+            fist: {train_title: '다짐', train_image_path: 'img/fist.png', train_subone_title: '윗방향', train_subtwo_title: '아랫방향', train_subone_name: 'Up', train_subtwo_name: 'Down'}
+        };
+        $scope.train_data = train_information[$scope.gesture_name];
 
-        // start collection...
-        var gravity = [0, 0, 0];
-        stop = $interval(function() {
-          // get accelerometer data
-          $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
+        // guide messages
+        var train_guide = {ready: "제스처 등록을 시작해주세요.", waiting: "움직이 없이 기다려주세요.", starting: "제스처를 시작해주세요.", collecting: "수집중 입니다.", finished: "수집이 완료되었습니다."};
+        $scope.train_guide_message = train_guide['ready'];
 
-              // remove gravity
-              var alpha = 0.8;
+        // training functions
+        var stop = undefined;
 
-              gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
-              gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
-              gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
+        // temporary storage
+        $scope.subgesture_one_template = [];
+        $scope.subgesture_two_template = [];
 
-              var x = result.x - gravity[0];
-              var y = result.y - gravity[1];
-              var z = result.z - gravity[2];
-              var magnitude = Math.sqrt(x * x + y * y + z * z);
+        $scope.train_start = function(index) {
+            // collect data for a subGesture
+            console.log('Function: train_start');
 
-              // add magnitude value to magnitude array
-              magnitude_array.push(magnitude);
+            // to prevent from calling multiple function at once.
+            $scope.train_stop();
 
-              var avg = 10000;  // Quite Large AVG
-              if(magnitude_array.length > 5) { // 5는 magnitude average 의 크기
-                var sum = 0;
-                for(var i = 0; i < magnitude_array.length; i++)
-                    sum += magnitude_array[i];
-                avg = sum / magnitude_array.length;
-                magnitude_array.shift();
-              }
+            // set message
+            $scope.train_guide_message = train_guide['waiting'];
 
-              if(isRecording === false && isStable === false) { // before stable
-                if(avg < 0.5) { // stable
-                    isStable = true;
-                    $scope.guide_message = "제스처를 시작해주세요";
-                }
-              } else if(isRecording === false && isStable === true) { // After stable
-                if(avg > 1.5) { // moving
-                    isRecording = true;
-                    $scope.guide_message = "제스처 수집중";
-                }
-              } else if(isRecording === true && isStable === true) {  // During Recording
-                if(avg < 1 && recorded_data[0].length > 10) {
-                    $scope.stopCollection();
-                    $scope.guide_message = "제스처 수집 종료";
-                    var template = [];
-                    for(var j = 0; j < recorded_data[0].length; j++) {
-                            var feature = [];
-                            var mag = Math.sqrt(recorded_data[0][j] * recorded_data[0][j] + recorded_data[1][j] * recorded_data[1][j] + recorded_data[2][j] * recorded_data[2][j]);
-                            feature.push(recorded_data[0][j] / mag); // x
-                            feature.push(recorded_data[1][j] / mag); // y
-                            feature.push(recorded_data[2][j] / mag); // z
-                            template.push(feature);
+            // Data set
+            var recorded_data = [
+                [], // For_X
+                [], // For_Y
+                [] // For_Z
+            ];
+            var magnitude_array = [];
+
+            // Status Variables
+            var isRecording = false;
+            var isStable = false;
+
+            // start collection...
+            var gravity = [0, 0, 0];
+            stop = $interval(function() {
+              // get accelerometer data
+              $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
+
+                  // remove gravity
+                  var alpha = 0.8;
+
+                  gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
+                  gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
+                  gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
+
+                  var x = result.x - gravity[0];
+                  var y = result.y - gravity[1];
+                  var z = result.z - gravity[2];
+                  var magnitude = Math.sqrt(x * x + y * y + z * z);
+
+                  // add magnitude value to magnitude array
+                  magnitude_array.push(magnitude);
+
+                  var avg = 10000;  // Quite Large AVG
+                  if(magnitude_array.length > 5) { // 5는 magnitude average 의 크기
+                    var sum = 0;
+                    for(var i = 0; i < magnitude_array.length; i++)
+                        sum += magnitude_array[i];
+                    avg = sum / magnitude_array.length;
+                    magnitude_array.shift();
+                  }
+
+                  if(isRecording === false && isStable === false) { // before stable
+                    if(avg < 0.5) { // stable
+                        isStable = true;
+                        $scope.train_guide_message = train_guide['starting'];
                     }
-                    $localstorage.setTemplate(subgesture, {subgesture:template});
-                } else {
-                    recorded_data[0].push(x);
-                    recorded_data[1].push(y);
-                    recorded_data[2].push(z);
-                }
-              }
-          }, function(err) {
-            // An error occurred. Show a message to the user
-          });
-        }, 25);
-    };
-
-    $scope.startTest = function(gesture) {
-        if ( angular.isDefined(stop) ) return;
-        // start test
-        console.log('Function: startTest of ' + gesture);
-
-        // get sub gesture list
-        var subgesture = gestureList[gesture];
-
-        $scope.testing = true;
-        $scope.left_button_activate = false;
-        $scope.right_button_activate = false;
-
-        // initialize raw mode
-        $scope.collection_features = [];
-        $scope.collection_feature_magnitudes = [];
-        $scope.analysis_index = 0;
-
-        $scope.current_state = "Non";
-
-        // get templates from local storage
-        var left_template = $localstorage.getTemplate(subgesture[0])["subgesture"];
-        var right_template = $localstorage.getTemplate(subgesture[1])["subgesture"];
-        console.log('A Length of a first template : ' + left_template.length);
-        console.log('A Length of a second template : : ' + right_template.length);
-
-
-        var frame_size = Math.min(left_template.length, right_template.length); // 이거 어떻게 정해야하는지 고민되는 구만
-
-        $scope.left_distance = 0;
-        $scope.right_distance = 0;
-
-        var left_src = "/audio/Left.mp3";
-        var left_media = $cordovaMedia.newMedia(left_src);
-        left_media.setVolume(0.5);
-
-        var right_src = "/audio/Right.mp3";
-        var right_media = $cordovaMedia.newMedia(right_src);
-        right_media.setVolume(0.5);
-
-        // start collecting
-        var gravity = [0, 0, 0];
-        stop = $interval(function() {
-          // get accelerometer data
-          $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
-
-              $scope.analysis_index++;
-
-              // calculate similarity
-              if($scope.collection_features.length > frame_size) {
-                 $scope.collection_features.shift();
-                 $scope.collection_feature_magnitudes.shift();
-
-                 // calculate average magnitude
-                 var sum = 0;
-                 for(var i = $scope.collection_feature_magnitudes.length - 5; i < $scope.collection_feature_magnitudes.length; i++)
-                    sum += $scope.collection_feature_magnitudes[i];
-                 $scope.avg_magnitude = sum / $scope.collection_feature_magnitudes.length;
-
-                 if($scope.analysis_index % 2 == 0) {
-                     // 현재 Left 인지 Right 인지로 구분해서 하면 되겠구나
-                     if($scope.current_state !== 'Left') {
-                        // Right or None
-                        var left_distance = $analyzer.getSimilarity(left_template, $scope.collection_features);
-                        if(left_distance < 15) {
-                            console.log('Left Gesture');
-                            $scope.current_state = 'Left';
-                            $scope.guide_message = 'Left';
-                            $scope.left_distance = left_distance;
-                            // 소리 Play
-                            //background_media.pause();
-                            left_media.play();
-                            //setTimeout(function(){ left_media.stop(); background_media.play(); }, 1000);
+                  } else if(isRecording === false && isStable === true) { // After stable
+                    if(avg > 1.5) { // moving
+                        isRecording = true;
+                        $scope.train_guide_message = train_guide['collecting'];
+                    }
+                  } else if(isRecording === true && isStable === true) {  // During Recording
+                    if(avg < 1 && recorded_data[0].length > 10) {
+                        $scope.train_stop();
+                        $scope.train_guide_message = train_guide['finished'];
+                        var template = [];
+                        for(var j = 0; j < recorded_data[0].length; j++) {
+                                var feature = [];
+                                var mag = Math.sqrt(recorded_data[0][j] * recorded_data[0][j] + recorded_data[1][j] * recorded_data[1][j] + recorded_data[2][j] * recorded_data[2][j]);
+                                feature.push(recorded_data[0][j] / mag); // x
+                                feature.push(recorded_data[1][j] / mag); // y
+                                feature.push(recorded_data[2][j] / mag); // z
+                                template.push(feature);
                         }
-                     } else if($scope.current_state !== 'Right') {
-                        var right_distance = $analyzer.getSimilarity(right_template, $scope.collection_features);
-                        if(right_distance < 15) {
-                            console.log('Right Gesture');
-                            $scope.current_state = 'Right';
-                            $scope.guide_message = 'Right';
-                            $scope.right_distance = right_distance;
-                            // 소리 Play
-                            //background_media.pause();
-                            right_media.play();
-                            //setTimeout(function(){ right_media.stop(); background_media.play(); }, 1000);
-                        }
+                        if(index === 0)
+                            $scope.subgesture_one_template = template;
+                        else
+                            $scope.subgesture_two_template = template;
+                    } else {
+                        recorded_data[0].push(x);
+                        recorded_data[1].push(y);
+                        recorded_data[2].push(z);
+                    }
+                  }
+              }, function(err) {
+                // An error occurred. Show a message to the user
+              });
+            }, 25);
+        };
+
+        $scope.train_stop = function() {
+            // stop collection
+            console.log('Function: train_stop');
+            if (angular.isDefined(stop)) {
+              $interval.cancel(stop);
+              stop = undefined;
+            }
+        };
+
+        // testing functions
+        $scope.train_test_start = function() {
+            if ( angular.isDefined(stop) ) return;
+
+            // start test
+            if($scope.subgesture_one_template !== [] && $scope.subgesture_two_template !== []) {
+                console.log('Function: train_test_start' + $scope.train_data['train_title']);
+            } else {
+                alert('트레이닝이 완료된 후에 테스트를 할 수 있습니다.');
+                return;
+            }
+
+            // initialize raw mode
+            $scope.collection_features = [];
+            $scope.collection_feature_magnitudes = [];
+            $scope.analysis_index = 0;
+
+            $scope.current_state = "Non";
+
+            // get templates from local storage
+            var left_template = $scope.subgesture_one_template;
+            var right_template = $scope.subgesture_two_template;
+            if(left_template.length === 0)
+                left_template = $localstorage.getTemplate($scope.train_data['train_subone_name'])['subgesture'];
+            if(right_template.length === 0)
+                right_template = $localstorage.getTemplate($scope.train_data['train_subtwo_name'])['subgesture'];
+            var frame_size = Math.min(left_template.length, right_template.length); // 이거 어떻게 정해야하는지 고민되는 구만
+            console.log('A Length of a first template : ' + left_template.length);
+            console.log('A Length of a second template : : ' + right_template.length);
+
+            $scope.left_distance = 0;
+            $scope.right_distance = 0;
+
+            // start collecting
+            var gravity = [0, 0, 0];
+            stop = $interval(function() {
+              // get accelerometer data
+              $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
+
+                  $scope.analysis_index++;
+
+                  // calculate similarity
+                  if($scope.collection_features.length > frame_size) {
+                     $scope.collection_features.shift();
+                     $scope.collection_feature_magnitudes.shift();
+
+                     // calculate average magnitude
+                     var sum = 0;
+                     for(var i = $scope.collection_feature_magnitudes.length - 5; i < $scope.collection_feature_magnitudes.length; i++)
+                        sum += $scope.collection_feature_magnitudes[i];
+                     $scope.avg_magnitude = sum / $scope.collection_feature_magnitudes.length;
+
+                     if($scope.analysis_index % 2 == 0) {
+                         // 현재 Left 인지 Right 인지로 구분해서 하면 되겠구나
+                         if($scope.current_state !== 'Left') {
+                            // Right or None
+                            var left_distance = $analyzer.getSimilarity(left_template, $scope.collection_features);
+                            if(left_distance < 15) {
+                                console.log('Left Gesture');
+                                $scope.current_state = 'Left';
+                                $scope.guide_message = 'Left';
+                                $scope.left_distance = left_distance;
+                                // 소리 Play
+                                $cordovaNativeAudio.play('effect_one');
+                            }
+                         } else if($scope.current_state !== 'Right') {
+                            var right_distance = $analyzer.getSimilarity(right_template, $scope.collection_features);
+                            if(right_distance < 15) {
+                                console.log('Right Gesture');
+                                $scope.current_state = 'Right';
+                                $scope.guide_message = 'Right';
+                                $scope.right_distance = right_distance;
+                                // 소리 Play
+                                $cordovaNativeAudio.play('effect_two');
+                            }
+                         }
                      }
+                  }
+
+                  // remove gravity
+                  var alpha = 0.8;
+                  gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
+                  gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
+                  gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
+
+                  // normalize and make collection_features
+                  var frame_feature = [];
+                  var magnitude = Math.sqrt((result.x - gravity[0]) * (result.x - gravity[0]) + (result.y - gravity[1]) * (result.y - gravity[1]) + (result.z - gravity[2]) * (result.z - gravity[2]));
+                  frame_feature.push((result.x - gravity[0]) / magnitude);
+                  frame_feature.push((result.y - gravity[1]) / magnitude);
+                  frame_feature.push((result.z - gravity[2]) / magnitude);
+                  $scope.collection_features.push(frame_feature);
+                  $scope.collection_feature_magnitudes.push(magnitude);
+
+              }, function(err) {
+                // An error occurred. Show a message to the user
+
+              });
+            }, 25);
+        };
+
+        // dialog functions
+        $scope.answer = function(answer) {
+            if(answer === 'complete') {
+                $localstorage.setTemplate( $scope.train_data['train_subone_name'], {subgesture:$scope.subgesture_one_template});
+                $localstorage.setTemplate( $scope.train_data['train_subtwo_name'], {subgesture:$scope.subgesture_two_template});
+            }
+            $mdDialog.hide(answer);
+            $scope.checkbox_data[$scope.gesture_name] = true;
+        };
+
+    }
+})
+
+.controller('gameCtrl', function($scope, $cordovaNativeAudio, $interval, $cordovaDeviceMotion, $localstorage, $analyzer) {
+    console.log('Start: Game Controller');
+
+    // start background music
+    $cordovaNativeAudio.loop('music');
+    $cordovaNativeAudio.setVolumeForComplexAsset('music', 1.0);
+
+    // initialize raw mode
+    $scope.collection_features = [];
+    $scope.collection_feature_magnitudes = [];
+    $scope.analysis_index = 0;
+    $scope.unrecognized_count = 0;
+    $scope.time = 0;
+    //state value
+    $scope.recognition_state = "non";
+    $scope.pre_gesturestate = "non";
+    //session
+    $scope.session_num = 0;
+    $scope.session_image = "img/cruise.png";
+    // progress
+    $scope.progress_value = 100;
+    var music_length = 4 * 60 + 26;
+
+    // get templates from local storage
+    var left_template = $localstorage.getTemplate('Left')['subgesture'];
+    var right_template = $localstorage.getTemplate('Right')['subgesture'];
+    var forward_template = $localstorage.getTemplate('Forward')['subgesture'];
+    var backward_template = $localstorage.getTemplate('Backward')['subgesture'];
+    var up_template = $localstorage.getTemplate('Up')['subgesture'];
+    var down_template = $localstorage.getTemplate('Down')['subgesture'];
+
+    // set one and two template with a initial gesture
+    var one_template = left_template.slice(0, left_template.length - 10);
+    var two_template = right_template.slice(0, right_template.length - 10);
+    var frame_size = Math.min(one_template.length, two_template.length);
+    console.log('A Length of the first and second template  : ' + one_template.length + ', ' + two_template.length);
+
+    // start collecting
+    var tick = 0;
+    var gravity = [0, 0, 0];
+    var rhythm_info = [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60];
+
+    var stop = $interval(function() {
+       tick = tick + 1;
+       if(tick % 40 === 0) {
+            // increase timer
+            $scope.time = $scope.time + 1;
+            $scope.progress_value = ($scope.time * 100) / music_length;
+
+            // increase unrecognized_count
+            if($scope.recognition_state === "non") $scope.unrecognized_count = $scope.unrecognized_count + 1;
+            else $scope.unrecognized_count = 0;
+
+            // volume control
+            if($scope.unrecognized_count > 8) $cordovaNativeAudio.setVolumeForComplexAsset('music', 0.1);
+            else $cordovaNativeAudio.setVolumeForComplexAsset('music', 1.0);
+
+            // change session
+            if($scope.time > 20 && $scope.session_num === 0) { // 2번째 session
+                // change session num
+                $scope.session_num = 1;
+                $scope.session_image = "img/hug.png";
+                // change template
+                one_template = forward_template.slice(0, forward_template.length - 10);
+                two_template = backward_template.slice(0, backward_template.length - 10);
+                frame_size = Math.min(one_template.length, two_template.length);
+                console.log('A Length of the first and second template  : ' + one_template.length + ', ' + two_template.length);
+            } else if($scope.time > 40 && $scope.session_num === 1) {
+                // change session num
+                $scope.session_num = 2;
+                $scope.session_image = "img/fist.png";
+                // change template
+                one_template = up_template.slice(0, up_template.length - 10);
+                two_template = down_template.slice(0, down_template.length - 10);
+                frame_size = Math.min(one_template.length, two_template.length);
+                console.log('A Length of the first and second template  : ' + one_template.length + ', ' + two_template.length);
+            }
+
+            // fire rhythm
+            var index = rhythm_info.indexOf($scope.time);
+            if(index !== -1) {
+                if(index % 2 == 0) {
+                    $cordovaNativeAudio.play('effect_one');
+                    $scope.recognition_state = "non";
+                }
+                else {
+                    $cordovaNativeAudio.play('effect_two');
+                    $scope.recognition_state = "non";
+                }
+
+                // 진동이 있으면 진동까지
+
+            }
+       }
+
+      // get accelerometer data
+      $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
+
+          $scope.analysis_index++;
+
+          // calculate similarity
+          if($scope.collection_features.length > frame_size) {
+             $scope.collection_features.shift();
+             $scope.collection_feature_magnitudes.shift();
+
+             // calculate average magnitude
+             var sum = 0;
+             for(var i = $scope.collection_feature_magnitudes.length - 5; i < $scope.collection_feature_magnitudes.length; i++)
+                sum += $scope.collection_feature_magnitudes[i];
+             $scope.avg_magnitude = sum / $scope.collection_feature_magnitudes.length;
+
+             if($scope.analysis_index % 2 == 0 && $scope.avg_magnitude > 0.2) {
+
+                 // get similarity
+                 if($scope.pre_gesturestate !== 'One') {
+                    // Right or None
+                    var left_distance = $analyzer.getSimilarity(one_template, $scope.collection_features);
+                    if(left_distance < 16) {
+                        console.log('One Gesture ' + tick);
+                        $scope.recognition_state = "One";
+                        $scope.pre_gesturestate = "One";
+                    }
+                 } else if($scope.pre_gesturestate !== 'Two') {
+                    var right_distance = $analyzer.getSimilarity(two_template, $scope.collection_features);
+                    if(right_distance < 16) {
+                        console.log('Two Gesture ' + tick);
+                        $scope.recognition_state = "Two";
+                        $scope.pre_gesturestate = "Two";
+                    }
                  }
-              }
 
-              // remove gravity
-              var alpha = 0.8;
-              gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
-              gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
-              gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
+             }
+          }
 
-              // normalize and make collection_features
-              var frame_feature = [];
-              var magnitude = Math.sqrt((result.x - gravity[0]) * (result.x - gravity[0]) + (result.y - gravity[1]) * (result.y - gravity[1]) + (result.z - gravity[2]) * (result.z - gravity[2]));
-              frame_feature.push((result.x - gravity[0]) / magnitude);
-              frame_feature.push((result.y - gravity[1]) / magnitude);
-              frame_feature.push((result.z - gravity[2]) / magnitude);
-              $scope.collection_features.push(frame_feature);
-              $scope.collection_feature_magnitudes.push(magnitude);
+          // remove gravity
+          var alpha = 0.8;
+          gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
+          gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
+          gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
 
-          }, function(err) {
-            // An error occurred. Show a message to the user
+          // normalize and make collection_features
+          var frame_feature = [];
+          var magnitude = Math.sqrt((result.x - gravity[0]) * (result.x - gravity[0]) + (result.y - gravity[1]) * (result.y - gravity[1]) + (result.z - gravity[2]) * (result.z - gravity[2]));
+          frame_feature.push((result.x - gravity[0]) / magnitude);
+          frame_feature.push((result.y - gravity[1]) / magnitude);
+          frame_feature.push((result.z - gravity[2]) / magnitude);
+          $scope.collection_features.push(frame_feature);
+          $scope.collection_feature_magnitudes.push(magnitude);
 
-          });
-        }, 25);
-    };
+      }, function(err) {});
+    }, 25);
 
-    $scope.stopCollection = function() {
 
-        if (angular.isDefined(stop)) {
-          $interval.cancel(stop);
-          stop = undefined;
-          $scope.testing = false;
-          $scope.left_button_activate = true;
-          $scope.right_button_activate = true;
+    // finish game session
+    $scope.stopGame = function() {
+        if(stop !== null) {
+            $interval.cancel(stop);
+            stop = null;
         }
-
-    };
-
-    $scope.imready = function() {
-        console.log("I'm Ready");
-        $state.go('login');
-    };
+        $cordovaNativeAudio.stop('music');
+    }
 
 });
-//
+
 //
 //.controller('homeCtrl', function($scope, $cordovaDeviceMotion, $interval, $state, $analyzer, $communication, $ionicPopup) {
 //
@@ -607,8 +832,8 @@ angular.module('starter.controllers', [])
 //
 //  };
 //
-//})
-//
+//});
+
 //.controller('analysisCtrl', function($scope, $ionicHistory, $stateParams, $communication, $analyzer) {
 //    $scope.menu_graph = true;
 //    $scope.menu_feature = false;
