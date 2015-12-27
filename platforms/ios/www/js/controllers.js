@@ -5,43 +5,19 @@ angular.module('starter.controllers', [])
     console.log('Start: Login Controller');
 
     $scope.startParticipant = function() {
-        if($scope.name === "")
+        if($scope.name === "") {
             alert('이름을 입력해주세요.');
-        else {
+        } else {
             $localstorage.setID($scope.name);
-            $state.go('train');
+            $state.go('gesture');
         }
     };
+
 })
 
 .controller('gestureCtrl', function($scope, $mdDialog, $localstorage, $state){
     /* 제스처에 대한 설명을 하고 각 제스처를 트레이닝 할 수 있는 화면 */
     console.log('Start: Gesture Ctrl');
-
-    $scope.checkbox_data = {ship: false, hug: false, fist: false};
-
-    // initialize checkbox
-    var left = $localstorage.getTemplate('Left');
-    var right = $localstorage.getTemplate('Right');
-    var forward = $localstorage.getTemplate('Forward');
-    var backward = $localstorage.getTemplate('Backward');
-    var up = $localstorage.getTemplate('Up');
-    var down = $localstorage.getTemplate('Down');
-    if(!isEmpty(left) && !isEmpty(right)) {
-        console.log('Ship gesture has trained already');
-        $scope.checkbox_data['ship'] = true;
-    }
-    if(!isEmpty(forward) && !isEmpty(backward)) {
-        console.log('Hug gesture has trained already');
-        $scope.checkbox_data['hug'] = true;
-    }
-    if(!isEmpty(up) && !isEmpty(down)) {
-        console.log('Fist gesture has trained already');
-        $scope.checkbox_data['fist'] = true;
-    }
-    function isEmpty(obj) {
-      return Object.keys(obj).length === 0;
-    }
 
     // show dialog
     $scope.showTrainDialog = function(gesture) {
@@ -66,14 +42,12 @@ angular.module('starter.controllers', [])
 
     };
 
-    $scope.ImReady = function() {
-        console.log('Function: ImReady');
-        $state.go('game');
-    };
-
     function trainController($scope, $mdDialog, $interval, $cordovaDeviceMotion, $analyzer, $cordovaNativeAudio, $localstorage) {
         /* 제스처를 트레이닝하는 다이얼로그 */
         console.log('Start: Train Controller');
+
+        // variables
+        $scope.testing = false;
 
         // setting information
         var train_information = {
@@ -83,146 +57,41 @@ angular.module('starter.controllers', [])
         };
         $scope.train_data = train_information[$scope.gesture_name];
 
-        // guide messages
-        var train_guide = {ready: "제스처 등록을 시작해주세요.", waiting: "움직이 없이 기다려주세요.", starting: "제스처를 시작해주세요.", collecting: "수집중 입니다.", finished: "수집이 완료되었습니다."};
-        $scope.train_guide_message = train_guide['ready'];
-
         // training functions
         var stop = undefined;
 
-        // temporary storage
-        $scope.subgesture_one_template = [];
-        $scope.subgesture_two_template = [];
-
-        $scope.train_start = function(index) {
-            // collect data for a subGesture
-            console.log('Function: train_start');
-
-            // to prevent from calling multiple function at once.
-            $scope.train_stop();
-
-            // set message
-            $scope.train_guide_message = train_guide['waiting'];
-
-            // Data set
-            var recorded_data = [
-                [], // For_X
-                [], // For_Y
-                [] // For_Z
-            ];
-            var magnitude_array = [];
-
-            // Status Variables
-            var isRecording = false;
-            var isStable = false;
-
-            // start collection...
-            var gravity = [0, 0, 0];
-            stop = $interval(function() {
-              // get accelerometer data
-              $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
-
-                  // remove gravity
-                  var alpha = 0.8;
-
-                  gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
-                  gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
-                  gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
-
-                  var x = result.x - gravity[0];
-                  var y = result.y - gravity[1];
-                  var z = result.z - gravity[2];
-                  var magnitude = Math.sqrt(x * x + y * y + z * z);
-
-                  // add magnitude value to magnitude array
-                  magnitude_array.push(magnitude);
-
-                  var avg = 10000;  // Quite Large AVG
-                  if(magnitude_array.length > 5) { // 5는 magnitude average 의 크기
-                    var sum = 0;
-                    for(var i = 0; i < magnitude_array.length; i++)
-                        sum += magnitude_array[i];
-                    avg = sum / magnitude_array.length;
-                    magnitude_array.shift();
-                  }
-
-                  if(isRecording === false && isStable === false) { // before stable
-                    if(avg < 0.5) { // stable
-                        isStable = true;
-                        $scope.train_guide_message = train_guide['starting'];
-                    }
-                  } else if(isRecording === false && isStable === true) { // After stable
-                    if(avg > 1.5) { // moving
-                        isRecording = true;
-                        $scope.train_guide_message = train_guide['collecting'];
-                    }
-                  } else if(isRecording === true && isStable === true) {  // During Recording
-                    if(avg < 1 && recorded_data[0].length > 10) {
-                        $scope.train_stop();
-                        $scope.train_guide_message = train_guide['finished'];
-                        var template = [];
-                        for(var j = 0; j < recorded_data[0].length; j++) {
-                                var feature = [];
-                                var mag = Math.sqrt(recorded_data[0][j] * recorded_data[0][j] + recorded_data[1][j] * recorded_data[1][j] + recorded_data[2][j] * recorded_data[2][j]);
-                                feature.push(recorded_data[0][j] / mag); // x
-                                feature.push(recorded_data[1][j] / mag); // y
-                                feature.push(recorded_data[2][j] / mag); // z
-                                template.push(feature);
-                        }
-                        if(index === 0)
-                            $scope.subgesture_one_template = template;
-                        else
-                            $scope.subgesture_two_template = template;
-                    } else {
-                        recorded_data[0].push(x);
-                        recorded_data[1].push(y);
-                        recorded_data[2].push(z);
-                    }
-                  }
-              }, function(err) {
-                // An error occurred. Show a message to the user
-              });
-            }, 25);
-        };
-
-        $scope.train_stop = function() {
-            // stop collection
-            console.log('Function: train_stop');
-            if (angular.isDefined(stop)) {
-              $interval.cancel(stop);
-              stop = undefined;
-            }
-        };
+        // set template
+        if($scope.gesture_name === 'ship') {
+            $scope.subgesture_one_template = [[-0.6068369703475742,-0.026042504840060234,0.794399571601743],[-0.6978317471866703,-0.15193026698203813,0.6999628894399802],[-0.8034888222270327,-0.14380513040208873,0.5776900527326518],[-0.7663456763546797,-0.13054477869100956,0.6290249320090611],[-0.7131226054139602,-0.16445821854621398,0.6814760773499028],[-0.7021110768776593,-0.18168081203645542,0.6884999043307615],[-0.8006373540999006,-0.1412968621516986,0.5822499669093975],[-0.8631827069389153,-0.1760371797758926,0.4732087549677804],[-0.8522889107446966,-0.16653483264809688,0.49585256088527857],[-0.7902285225706821,-0.14763151519068352,0.5947636655330083],[-0.9276333847643,-0.16519995833344922,0.3349705617473794],[-0.9770015011021141,-0.20004389545246914,-0.07382754727347393],[-0.8530812499906828,-0.5140950619777452,-0.0892112558169215],[-0.853081249990683,-0.5140950619777452,-0.08921125581692184],[-0.4401928494454764,-0.27869260579585586,-0.8535576645849933],[0.14764950788253683,0.1406549743716198,-0.978987130153693],[0.2085538154802504,0.17198949285510542,-0.9627694014643763],[0.2266394558609215,-0.20437883004993065,-0.9522939939296514],[0.3347472418715192,-0.09246345827122805,-0.9377605200390638],[0.5815672791118558,-0.02132797163163272,-0.8132186775354543],[0.39805356203351977,0.0921329162386713,-0.9127238834925845],[0.30942520563121767,0.03340271701861081,-0.9503369405720549],[0.11380773174350245,0.1454842214085288,-0.9827930308648679],[-0.1299472470974302,0.3307159287708456,-0.9347409734407904],[-0.19508889953285388,0.41784314683339957,-0.8873259975473625],[-0.5188728085891828,0.5613327060682187,-0.6447298671574818],[-0.7300733889083715,0.5231773878753245,-0.4396342430063859],[-0.8283263121942988,0.523564548684078,-0.19938827419843597],[-0.8551856850577382,0.5024137820466691,-0.1274277665263301]];
+            $scope.subgesture_two_template = [[0.9546596674237967,-0.21284703116082745,0.20813711999618764],[0.9546596674237967,-0.21284703116082737,0.2081371199961875],[0.7089696562883249,-0.22789965004984652,0.667400761139491],[0.577486159012473,-0.2708171878346097,0.7701738679820124],[0.46825427168390693,-0.22047104655434865,0.8556462205146496],[0.3706255886433184,-0.2142002983813377,0.9037449337153375],[0.34431234299509367,-0.20570089409114894,0.9160437503915034],[0.2919813442522003,-0.19987562425228408,0.9353056342385829],[0.19899887313279002,-0.1906802441550231,0.9612702497117346],[0.19664640493708466,-0.18971316234417587,0.9619454805022437],[0.23515817958232194,-0.20192910727103533,0.950749844182081],[0.22325660323814628,-0.19025571061111565,0.9560121618946196],[0.11910852568039913,-0.2253510298805098,0.9669695302552378],[-0.235800950260811,-0.30844808216942815,0.9215517850137888],[0.2283315255234926,0.1407644994099562,0.9633535540796945],[0.1371236710160038,0.5010553086370871,-0.8544826952804182],[0.16741028126390317,0.29508498174717523,-0.9406905183291739],[0.27274043488740135,0.30300310269256375,-0.9131274691608565],[0.22478011235865664,0.32146722379672144,-0.9198547304397897],[0.19491113494356999,0.2777839363873172,-0.9406623911692104],[0.17541343789967473,0.21768577516606014,-0.9601265693097804],[0.1599320510769151,0.17316006417533503,-0.9718216560733377],[0.20399714607855648,0.17091304373324084,-0.9639366659037529],[0.23074324003612776,0.1092581515134532,-0.9668610104381568],[0.29814178979871725,0.1856639935712694,-0.9362907425937657],[0.45667516438519373,0.25743199290449864,-0.8515729935025972],[0.533683258114526,0.2400695267130798,-0.8108938292723789],[0.5709459512703886,0.24485636993410465,-0.783623684449777],[0.7433975912460832,0.3306924234667637,-0.5813798606687371],[0.8110065464177658,0.3185989225680866,-0.49067617448372475],[0.7827003087448844,0.2813275753933577,-0.555189176780273]];
+        } else if($scope.gesture_name === 'hug') {
+            $scope.subgesture_one_template = [[-0.0458635019801116,-0.7290011385773202,-0.6829742887833268],[-0.014547444080206829,-0.9540299482026292,-0.29935802946174983],[0.27685878038964373,-0.9180842213581708,0.28367336535938725],[-0.19735860761388765,-0.8091438670584195,0.5534760901813686],[-0.43320339109846023,-0.7310797065467687,0.5271216981080222],[-0.46879403590852475,-0.7447720043538256,0.474917691213311],[-0.1985448626134905,-0.7689906032425933,0.6076457764638725],[-0.26611402784905425,-0.7008530310329587,0.6618068850305708],[-0.48055959282819066,-0.6300222928045555,0.6100281864882101],[-0.4855401324163937,-0.6289603511494519,0.6071734978529852],[-0.2978044756429086,-0.6195028741663658,0.7263116983683138],[-0.12138930771609643,-0.5498615569390942,0.8263878654558778],[-0.257439408561011,-0.504097095645929,0.8243852673847927],[-0.32378627584444813,-0.36936505970727546,0.8710521799767358],[-0.21444585365727772,-0.33387437640621026,0.9179002541826458],[-0.19790265710441365,-0.25229631744093395,0.9471964455786118],[-0.48768464646268445,-0.1329836984609033,0.8628319775878881],[-0.7989708479981406,-0.017395682043231334,0.6011181034500483],[-0.7992600715529367,-0.15783042872235187,-0.579890415329063],[0.14765924994962878,0.028333398585379376,-0.9886323707166963],[0.09099770145664492,0.11942590373998313,-0.9886641855784478],[0.10904154289988179,0.17726526912964463,-0.9781037604888388],[0.28021415240321823,0.18177534016737854,-0.9425697610787118],[0.5698707090822834,0.24650009950399188,-0.7838909846876527],[0.7285057633347243,0.3418992952380737,-0.593619595956703],[0.8725771222030154,0.2643768670269809,-0.4107481442306243],[0.9078455643762641,0.29874548707447557,-0.2942236652531147],[0.6704902539091827,0.29191953913028607,-0.6820746308775609]];
+            $scope.subgesture_two_template = [[-0.4329478230736424,0.0963393884574018,0.8962560486420429],[-0.43294782307364266,0.09633938845740185,0.8962560486420426],[-0.38395135837296485,0.4011085255018309,-0.8316810116705214],[-0.3091616869066213,0.44046436926735144,-0.8428583456043884],[0.01315766381931722,0.4645086164751424,-0.8854708471221211],[0.050192827669871876,0.4117621188946093,-0.9099080379323639],[0.1547826292816943,0.2519652016276497,-0.9552779045080982],[0.199137673262405,0.34735757833308684,-0.9163443129425801],[0.3236627397508435,0.37067783556876627,-0.8705402765610748],[0.34709402099232417,0.3426467654319517,-0.8729942352217459],[0.24137786784096396,0.39883711449965537,-0.8846839441371924],[0.24137786784096393,0.39883711449965525,-0.8846839441371924],[0.4197980517043366,0.3439715749725972,-0.8399125855683519],[0.4197980517043366,0.34397157497259717,-0.8399125855683518],[0.4800299384347038,0.41146828046594425,-0.7747677796454713],[0.4800299384347039,0.4114682804659443,-0.7747677796454712],[0.4106135035609854,0.3210202922559211,-0.8534298580746373],[0.4114321315002143,0.33949387492727856,-0.8458531255815347],[0.48632421119709923,0.3437804650231369,-0.8033080066026946],[0.4694831567329592,0.30296689639625,-0.8293350500443591],[0.514257098039243,0.2827152633769024,-0.8096985346225996],[0.44489446505910957,0.37559439273383716,-0.813017691755025],[0.4021040390364247,0.5566809672740839,-0.7269240967703463],[-0.2912526819997465,0.5820662620314269,0.7591908467788037],[-0.3404983014895565,0.06959646115595987,0.9376658462785632],[-0.5213761013419965,0.23694135192467203,0.8197717711031095],[-0.6719699456582146,0.6282362309544787,0.3921423596708306],[-0.7252303964940559,0.48472736219903506,0.4889583380377514]];
+        } else if($scope.gesture_name === 'fist') {
+            $scope.subgesture_one_template = [[0.3931954656332231,-0.6894349094426494,-0.6083394048122139],[0.4421543443366109,-0.8203402357343829,-0.36268641195875956],[0.3015707785184035,-0.9413774082642385,0.15120727744890203],[0.2616387577142776,-0.9591120543407331,0.10793158796213433],[0.2913952789933124,-0.9158201732607844,0.276337115909167],[0.2913952789933126,-0.9158201732607844,0.27633711590916693],[0.41122908851622636,-0.7580156330902431,0.5062637027764402],[0.45744602928895145,-0.841720000256749,0.2867936042793671],[0.42436185743193716,-0.9009856693809205,0.09023213134538498],[0.3288347995369369,-0.9409570732127893,-0.08042052588937748],[0.2974460304623019,-0.9526419763239945,-0.06323862670657082],[0.19078539845979275,-0.8784843326719075,0.43802535198836545],[0.13683398345831746,-0.7916417556448282,0.595466028997879],[0.19507615628653932,-0.73413850579283,0.6503736983925015],[0.311796363800432,-0.7116421709557034,0.6295621081658919],[0.7239315672979126,-0.310841013853032,0.6158741348493272],[0.904534074386287,0.08576135962252864,0.4176877990435421],[0.7872099057644818,0.5407399980548087,0.296480722425525],[0.7272032213367952,0.5934877507711737,0.3448880464179087],[0.6102149730657696,0.7329061964231376,-0.3008092317248776],[0.3345047838450289,0.5682310854629098,-0.7518111352583396],[0.03829506962732256,0.48829712220081406,-0.8718368012951976],[-0.5096789930217579,0.19024102899255158,-0.8390683374792436],[-0.638285620371274,-0.08228352620950699,-0.7653893702827256],[-0.576352521716996,-0.15462602972791853,-0.802439132670535],[-0.6894195816489029,0.057836552295011494,-0.7220495645436524],[-0.6078932945112059,0.06610525457967889,-0.7912621801939406],[-0.4393909490615608,0.034499867440032396,-0.8976331951467711],[-0.4011899454284438,0.22571552018396782,-0.8877494757166591]];
+            $scope.subgesture_two_template = [[0.5016632143414363,-0.35683171276110914,0.7880387986289705],[0.5143110183323178,-0.4525432829004476,0.7284838732076777],[0.4143121426536822,-0.6396146313944675,0.6474863487022985],[0.20060543839287479,-0.7647999781589362,0.6122405176850788],[0.020712307965896414,-0.8553224045316917,0.517681933821194],[-0.05548153361697582,-0.9723095611164896,0.22701523470676513],[-0.8318886879388758,-0.2598046663283034,-0.4903700095166656],[-0.6626649031583332,0.29937332173273157,-0.6864771229668671],[-0.5644889275061177,0.6350628708747854,-0.5273020014747419],[-0.5597059622425012,0.7212159520432299,-0.40813819516013605],[-0.5213870676090696,0.7530338440014036,-0.4013671081671804],[-0.42951505541001667,0.7774736754765836,-0.45940341870415163],[-0.40151036435307697,0.8143840276626778,-0.41900845194933034],[-0.4765613749379,0.8126373356246014,-0.33542483012777563],[-0.442015621354421,0.8674535436749564,-0.22835616927165667],[-0.35522910525971574,0.9095530134937787,-0.2156979332788516],[-0.24149187228049018,0.932912167689308,-0.2671264925081376],[-0.2814136842971468,0.9529088133601962,-0.11300943195489568],[-0.3499127236889651,0.9364910574891185,0.023357761953630856],[-0.3196980513469772,0.9344492116822967,0.1568369431966841],[-0.19871721927702266,0.9393180414835183,0.2796302625009947],[-0.3238790741390571,0.7039138125677367,0.6321453075133757],[-0.5077755168575743,0.5927137477374171,0.6251835232338492],[-0.4620929308115145,0.6752361276011358,0.5749141633985437],[-0.3400262240487626,0.7515170086612928,0.5653356106348892],[-0.134022931818962,0.7196642992563833,0.6812643760849885],[-0.022262150732644963,0.6876660061232391,0.7256857864580719],[-0.31590575259962556,0.692012963773135,0.6490929158790641]];
+        }
 
         // testing functions
         $scope.train_test_start = function() {
             if ( angular.isDefined(stop) ) return;
 
-            // start test
-            if($scope.subgesture_one_template !== [] && $scope.subgesture_two_template !== []) {
-                console.log('Function: train_test_start' + $scope.train_data['train_title']);
-            } else {
-                alert('트레이닝이 완료된 후에 테스트를 할 수 있습니다.');
-                return;
-            }
-
+            $scope.testing = true;
             // initialize raw mode
             $scope.collection_features = [];
             $scope.collection_feature_magnitudes = [];
             $scope.analysis_index = 0;
+            $scope.recognition_state = "non";
+            $scope.pre_gesturestate = "non";
 
             $scope.current_state = "Non";
 
             // get templates from local storage
-            var left_template = $scope.subgesture_one_template;
-            var right_template = $scope.subgesture_two_template;
-            if(left_template.length === 0)
-                left_template = $localstorage.getTemplate($scope.train_data['train_subone_name'])['subgesture'];
-            if(right_template.length === 0)
-                right_template = $localstorage.getTemplate($scope.train_data['train_subtwo_name'])['subgesture'];
-            var frame_size = Math.min(left_template.length, right_template.length); // 이거 어떻게 정해야하는지 고민되는 구만
-            console.log('A Length of a first template : ' + left_template.length);
-            console.log('A Length of a second template : : ' + right_template.length);
+            var one_template = $scope.subgesture_one_template;
+            var two_template = $scope.subgesture_two_template;
+            var frame_size = Math.min(one_template.length, two_template.length); // 이거 어떻게 정해야하는지 고민되는 구만
+            console.log('A Length of one template : ' + one_template.length);
+            console.log('A Length of two template : : ' + two_template.length);
 
             $scope.left_distance = 0;
             $scope.right_distance = 0;
@@ -231,246 +100,657 @@ angular.module('starter.controllers', [])
             var gravity = [0, 0, 0];
             stop = $interval(function() {
               // get accelerometer data
-              $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
+              $cordovaDeviceMotion.getCurrentAcceleration().then(function (result) {
 
-                  $scope.analysis_index++;
+                    $scope.analysis_index++;
 
-                  // calculate similarity
-                  if($scope.collection_features.length > frame_size) {
-                     $scope.collection_features.shift();
-                     $scope.collection_feature_magnitudes.shift();
+                    // calculate similarity
+                    if ($scope.collection_features.length > frame_size) {
+                        $scope.collection_features.shift();
+                        $scope.collection_feature_magnitudes.shift();
 
-                     // calculate average magnitude
-                     var sum = 0;
-                     for(var i = $scope.collection_feature_magnitudes.length - 5; i < $scope.collection_feature_magnitudes.length; i++)
-                        sum += $scope.collection_feature_magnitudes[i];
-                     $scope.avg_magnitude = sum / $scope.collection_feature_magnitudes.length;
+                        // calculate average magnitude
+                        var sum = 0;
+                        for (var i = $scope.collection_feature_magnitudes.length - 5; i < $scope.collection_feature_magnitudes.length; i++)
+                            sum += $scope.collection_feature_magnitudes[i];
+                        $scope.avg_magnitude = sum / $scope.collection_feature_magnitudes.length;
 
-                     if($scope.analysis_index % 2 == 0) {
-                         // 현재 Left 인지 Right 인지로 구분해서 하면 되겠구나
-                         if($scope.current_state !== 'Left') {
-                            // Right or None
-                            var left_distance = $analyzer.getSimilarity(left_template, $scope.collection_features);
-                            if(left_distance < 15) {
-                                console.log('Left Gesture');
-                                $scope.current_state = 'Left';
-                                $scope.guide_message = 'Left';
-                                $scope.left_distance = left_distance;
-                                // 소리 Play
-                                $cordovaNativeAudio.play('effect_one');
+                        if ($scope.analysis_index % 2 == 0 && $scope.avg_magnitude > 0.2) {
+
+                            // get similarity
+                            if ($scope.pre_gesturestate !== 'One') {
+                                // Right or None
+                                var left_distance = $analyzer.getSimilarity(one_template, $scope.collection_features);
+                                if (left_distance < 17) {
+                                    console.log('One Gesture ' + left_distance);
+                                    $scope.recognition_state = "One";
+                                    $scope.pre_gesturestate = "One";
+                                    $cordovaNativeAudio.play('effect_one');
+                                }
+                            } else if ($scope.pre_gesturestate !== 'Two') {
+                                var right_distance = $analyzer.getSimilarity(two_template, $scope.collection_features);
+                                if (right_distance < 17) {
+                                    console.log('Two Gesture ' + right_distance);
+                                    $scope.recognition_state = "Two";
+                                    $scope.pre_gesturestate = "Two";
+                                    $cordovaNativeAudio.play('effect_two');
+                                }
                             }
-                         } else if($scope.current_state !== 'Right') {
-                            var right_distance = $analyzer.getSimilarity(right_template, $scope.collection_features);
-                            if(right_distance < 15) {
-                                console.log('Right Gesture');
-                                $scope.current_state = 'Right';
-                                $scope.guide_message = 'Right';
-                                $scope.right_distance = right_distance;
-                                // 소리 Play
-                                $cordovaNativeAudio.play('effect_two');
-                            }
-                         }
-                     }
-                  }
+                        }
+                    }
 
-                  // remove gravity
-                  var alpha = 0.8;
-                  gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
-                  gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
-                  gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
+                    // remove gravity
+                    var alpha = 0.8;
+                    gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
+                    gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
+                    gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
 
-                  // normalize and make collection_features
-                  var frame_feature = [];
-                  var magnitude = Math.sqrt((result.x - gravity[0]) * (result.x - gravity[0]) + (result.y - gravity[1]) * (result.y - gravity[1]) + (result.z - gravity[2]) * (result.z - gravity[2]));
-                  frame_feature.push((result.x - gravity[0]) / magnitude);
-                  frame_feature.push((result.y - gravity[1]) / magnitude);
-                  frame_feature.push((result.z - gravity[2]) / magnitude);
-                  $scope.collection_features.push(frame_feature);
-                  $scope.collection_feature_magnitudes.push(magnitude);
+                    // normalize and make collection_features
+                    var frame_feature = [];
+                    var magnitude = Math.sqrt((result.x - gravity[0]) * (result.x - gravity[0]) + (result.y - gravity[1]) * (result.y - gravity[1]) + (result.z - gravity[2]) * (result.z - gravity[2]));
+                    frame_feature.push((result.x - gravity[0]) / magnitude);
+                    frame_feature.push((result.y - gravity[1]) / magnitude);
+                    frame_feature.push((result.z - gravity[2]) / magnitude);
+                    $scope.collection_features.push(frame_feature);
+                    $scope.collection_feature_magnitudes.push(magnitude);
 
-              }, function(err) {
-                // An error occurred. Show a message to the user
+                }, function (err) {
+                });
 
-              });
+
             }, 25);
+        };
+
+        $scope.train_stop = function() {
+            // stop collection
+            console.log('Function: train_stop');
+            if (angular.isDefined(stop)) {
+              $scope.testing = false;
+              $interval.cancel(stop);
+              stop = undefined;
+            }
         };
 
         // dialog functions
         $scope.answer = function(answer) {
-            if(answer === 'complete') {
-                $localstorage.setTemplate( $scope.train_data['train_subone_name'], {subgesture:$scope.subgesture_one_template});
-                $localstorage.setTemplate( $scope.train_data['train_subtwo_name'], {subgesture:$scope.subgesture_two_template});
+            if($scope.testing === false) {
+                $mdDialog.hide(answer);
             }
-            $mdDialog.hide(answer);
-            $scope.checkbox_data[$scope.gesture_name] = true;
         };
 
     }
+
+    $scope.ImReady = function() {
+        console.log('Function: ImReady');
+        $state.go('game');
+
+    };
 })
 
-.controller('gameCtrl', function($scope, $cordovaNativeAudio, $interval, $cordovaDeviceMotion, $localstorage, $analyzer) {
+
+.controller('gameCtrl', function($scope, $cordovaNativeAudio, $interval, $cordovaDeviceMotion, $localstorage, $analyzer, $cordovaVibration, $socket, $template) {
     console.log('Start: Game Controller');
 
-    // start background music
-    $cordovaNativeAudio.loop('music');
-    $cordovaNativeAudio.setVolumeForComplexAsset('music', 1.0);
+    var my_name = $localstorage.getID();
+    $scope.vibration = false;
 
-    // initialize raw mode
-    $scope.collection_features = [];
-    $scope.collection_feature_magnitudes = [];
-    $scope.analysis_index = 0;
-    $scope.unrecognized_count = 0;
-    $scope.time = 0;
-    //state value
-    $scope.recognition_state = "non";
-    $scope.pre_gesturestate = "non";
-    //session
-    $scope.session_num = 0;
-    $scope.session_image = "img/cruise.png";
-    // progress
-    $scope.progress_value = 50;
-    var music_length = 4 * 60 + 26;
+    // [Socket] Init
+    $scope.socket = $socket.getSocket();
+    $scope.socket.on('connect',function(){
+        console.log('SocketOn: Successfully connected');
+    });
 
-    // get templates from local storage
-    var left_template = $localstorage.getTemplate('Left')['subgesture'];
-    var right_template = $localstorage.getTemplate('Right')['subgesture'];
-    var forward_template = $localstorage.getTemplate('Forward')['subgesture'];
-    var backward_template = $localstorage.getTemplate('Backward')['subgesture'];
-    var up_template = $localstorage.getTemplate('Up')['subgesture'];
-    var down_template = $localstorage.getTemplate('Down')['subgesture'];
+    // [Socket] Login
+    $scope.socket.emit('Login', my_name);
 
-    // set one and two template with a initial gesture
-    var one_template = left_template.slice(0, left_template.length - 10);
-    var two_template = right_template.slice(0, right_template.length - 10);
-    var frame_size = Math.min(one_template.length, two_template.length);
-    console.log('A Length of the first and second template  : ' + one_template.length + ', ' + two_template.length);
-
-    // start collecting
-    var tick = 0;
-    var gravity = [0, 0, 0];
-    var rhythm_info = [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60];
-
-    var stop = $interval(function() {
-       tick = tick + 1;
-       if(tick % 40 === 0) {
-            // increase timer
-            $scope.time = $scope.time + 1;
-            $scope.progress_value = ($scope.time * 100) / music_length;
-
-            // increase unrecognized_count
-            if($scope.recognition_state === "non") $scope.unrecognized_count = $scope.unrecognized_count + 1;
-            else $scope.unrecognized_count = 0;
-
-            // volume control
-            if($scope.unrecognized_count > 8) $cordovaNativeAudio.setVolumeForComplexAsset('music', 0.1);
-            else $cordovaNativeAudio.setVolumeForComplexAsset('music', 1.0);
-
-            // change session
-            if($scope.time > 20 && $scope.session_num === 0) { // 2번째 session
-                // change session num
-                $scope.session_num = 1;
-                $scope.session_image = "img/hug.png";
-                // change template
-                one_template = forward_template.slice(0, forward_template.length - 10);
-                two_template = backward_template.slice(0, backward_template.length - 10);
-                frame_size = Math.min(one_template.length, two_template.length);
-                console.log('A Length of the first and second template  : ' + one_template.length + ', ' + two_template.length);
-            } else if($scope.time > 40 && $scope.session_num === 1) {
-                // change session num
-                $scope.session_num = 2;
-                $scope.session_image = "img/fist.png";
-                // change template
-                one_template = up_template.slice(0, up_template.length - 10);
-                two_template = down_template.slice(0, down_template.length - 10);
-                frame_size = Math.min(one_template.length, two_template.length);
-                console.log('A Length of the first and second template  : ' + one_template.length + ', ' + two_template.length);
-            }
-
-            // fire rhythm
-            var index = rhythm_info.indexOf($scope.time);
-            if(index !== -1) {
-                if(index % 2 == 0) {
-                    $cordovaNativeAudio.play('effect_one');
-                    $scope.recognition_state = "non";
-                }
-                else {
-                    $cordovaNativeAudio.play('effect_two');
-                    $scope.recognition_state = "non";
-                }
-
-                // 진동이 있으면 진동까지
-
-            }
-       }
-
-      // get accelerometer data
-      $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
-
-          $scope.analysis_index++;
-
-          // calculate similarity
-          if($scope.collection_features.length > frame_size) {
-             $scope.collection_features.shift();
-             $scope.collection_feature_magnitudes.shift();
-
-             // calculate average magnitude
-             var sum = 0;
-             for(var i = $scope.collection_feature_magnitudes.length - 5; i < $scope.collection_feature_magnitudes.length; i++)
-                sum += $scope.collection_feature_magnitudes[i];
-             $scope.avg_magnitude = sum / $scope.collection_feature_magnitudes.length;
-
-             if($scope.analysis_index % 2 == 0 && $scope.avg_magnitude > 0.2) {
-
-                 // get similarity
-                 if($scope.pre_gesturestate !== 'One') {
-                    // Right or None
-                    var left_distance = $analyzer.getSimilarity(one_template, $scope.collection_features);
-                    if(left_distance < 16) {
-                        console.log('One Gesture ' + tick);
-                        $scope.recognition_state = "One";
-                        $scope.pre_gesturestate = "One";
-                    }
-                 } else if($scope.pre_gesturestate !== 'Two') {
-                    var right_distance = $analyzer.getSimilarity(two_template, $scope.collection_features);
-                    if(right_distance < 16) {
-                        console.log('Two Gesture ' + tick);
-                        $scope.recognition_state = "Two";
-                        $scope.pre_gesturestate = "Two";
-                    }
-                 }
-
-             }
+    // [Socket] On Start
+    $scope.socket.on('Start', function(data) {
+        console.log('SocketOn: Start Game at ' + data);
+        var start_timer = setInterval(function(){
+          var current_timestamp = new Date().getTime();
+          if(current_timestamp >= data) {
+              clearInterval(start_timer);
+              $scope.playGame();
           }
+        },10);
+    });
 
-          // remove gravity
-          var alpha = 0.8;
-          gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
-          gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
-          gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
+    // [Socket] Vibration
+    $scope.socket.on('Vibration', function() {
+        console.log('SocketOn: Vibration');
+        $scope.vibration = true;
+    });
 
-          // normalize and make collection_features
-          var frame_feature = [];
-          var magnitude = Math.sqrt((result.x - gravity[0]) * (result.x - gravity[0]) + (result.y - gravity[1]) * (result.y - gravity[1]) + (result.z - gravity[2]) * (result.z - gravity[2]));
-          frame_feature.push((result.x - gravity[0]) / magnitude);
-          frame_feature.push((result.y - gravity[1]) / magnitude);
-          frame_feature.push((result.z - gravity[2]) / magnitude);
-          $scope.collection_features.push(frame_feature);
-          $scope.collection_feature_magnitudes.push(magnitude);
+    // [Game] Start
+    $scope.playGame = function() {
+        // start background music
+        $cordovaNativeAudio.loop('music');
+        $cordovaNativeAudio.loop('beat');
 
-      }, function(err) {});
-    }, 25);
+        //
+        $scope.cut_length = 5;
+        // get templates from local storage
+        var left_template = [[-0.6068369703475742,-0.026042504840060234,0.794399571601743],[-0.6978317471866703,-0.15193026698203813,0.6999628894399802],[-0.8034888222270327,-0.14380513040208873,0.5776900527326518],[-0.7663456763546797,-0.13054477869100956,0.6290249320090611],[-0.7131226054139602,-0.16445821854621398,0.6814760773499028],[-0.7021110768776593,-0.18168081203645542,0.6884999043307615],[-0.8006373540999006,-0.1412968621516986,0.5822499669093975],[-0.8631827069389153,-0.1760371797758926,0.4732087549677804],[-0.8522889107446966,-0.16653483264809688,0.49585256088527857],[-0.7902285225706821,-0.14763151519068352,0.5947636655330083],[-0.9276333847643,-0.16519995833344922,0.3349705617473794],[-0.9770015011021141,-0.20004389545246914,-0.07382754727347393],[-0.8530812499906828,-0.5140950619777452,-0.0892112558169215],[-0.853081249990683,-0.5140950619777452,-0.08921125581692184],[-0.4401928494454764,-0.27869260579585586,-0.8535576645849933],[0.14764950788253683,0.1406549743716198,-0.978987130153693],[0.2085538154802504,0.17198949285510542,-0.9627694014643763],[0.2266394558609215,-0.20437883004993065,-0.9522939939296514],[0.3347472418715192,-0.09246345827122805,-0.9377605200390638],[0.5815672791118558,-0.02132797163163272,-0.8132186775354543],[0.39805356203351977,0.0921329162386713,-0.9127238834925845],[0.30942520563121767,0.03340271701861081,-0.9503369405720549],[0.11380773174350245,0.1454842214085288,-0.9827930308648679],[-0.1299472470974302,0.3307159287708456,-0.9347409734407904],[-0.19508889953285388,0.41784314683339957,-0.8873259975473625],[-0.5188728085891828,0.5613327060682187,-0.6447298671574818],[-0.7300733889083715,0.5231773878753245,-0.4396342430063859],[-0.8283263121942988,0.523564548684078,-0.19938827419843597],[-0.8551856850577382,0.5024137820466691,-0.1274277665263301]];
+        var right_template = [[0.9546596674237967,-0.21284703116082745,0.20813711999618764],[0.9546596674237967,-0.21284703116082737,0.2081371199961875],[0.7089696562883249,-0.22789965004984652,0.667400761139491],[0.577486159012473,-0.2708171878346097,0.7701738679820124],[0.46825427168390693,-0.22047104655434865,0.8556462205146496],[0.3706255886433184,-0.2142002983813377,0.9037449337153375],[0.34431234299509367,-0.20570089409114894,0.9160437503915034],[0.2919813442522003,-0.19987562425228408,0.9353056342385829],[0.19899887313279002,-0.1906802441550231,0.9612702497117346],[0.19664640493708466,-0.18971316234417587,0.9619454805022437],[0.23515817958232194,-0.20192910727103533,0.950749844182081],[0.22325660323814628,-0.19025571061111565,0.9560121618946196],[0.11910852568039913,-0.2253510298805098,0.9669695302552378],[-0.235800950260811,-0.30844808216942815,0.9215517850137888],[0.2283315255234926,0.1407644994099562,0.9633535540796945],[0.1371236710160038,0.5010553086370871,-0.8544826952804182],[0.16741028126390317,0.29508498174717523,-0.9406905183291739],[0.27274043488740135,0.30300310269256375,-0.9131274691608565],[0.22478011235865664,0.32146722379672144,-0.9198547304397897],[0.19491113494356999,0.2777839363873172,-0.9406623911692104],[0.17541343789967473,0.21768577516606014,-0.9601265693097804],[0.1599320510769151,0.17316006417533503,-0.9718216560733377],[0.20399714607855648,0.17091304373324084,-0.9639366659037529],[0.23074324003612776,0.1092581515134532,-0.9668610104381568],[0.29814178979871725,0.1856639935712694,-0.9362907425937657],[0.45667516438519373,0.25743199290449864,-0.8515729935025972],[0.533683258114526,0.2400695267130798,-0.8108938292723789],[0.5709459512703886,0.24485636993410465,-0.783623684449777],[0.7433975912460832,0.3306924234667637,-0.5813798606687371],[0.8110065464177658,0.3185989225680866,-0.49067617448372475],[0.7827003087448844,0.2813275753933577,-0.555189176780273]];
+        var forward_template = [[-0.0458635019801116,-0.7290011385773202,-0.6829742887833268],[-0.014547444080206829,-0.9540299482026292,-0.29935802946174983],[0.27685878038964373,-0.9180842213581708,0.28367336535938725],[-0.19735860761388765,-0.8091438670584195,0.5534760901813686],[-0.43320339109846023,-0.7310797065467687,0.5271216981080222],[-0.46879403590852475,-0.7447720043538256,0.474917691213311],[-0.1985448626134905,-0.7689906032425933,0.6076457764638725],[-0.26611402784905425,-0.7008530310329587,0.6618068850305708],[-0.48055959282819066,-0.6300222928045555,0.6100281864882101],[-0.4855401324163937,-0.6289603511494519,0.6071734978529852],[-0.2978044756429086,-0.6195028741663658,0.7263116983683138],[-0.12138930771609643,-0.5498615569390942,0.8263878654558778],[-0.257439408561011,-0.504097095645929,0.8243852673847927],[-0.32378627584444813,-0.36936505970727546,0.8710521799767358],[-0.21444585365727772,-0.33387437640621026,0.9179002541826458],[-0.19790265710441365,-0.25229631744093395,0.9471964455786118],[-0.48768464646268445,-0.1329836984609033,0.8628319775878881],[-0.7989708479981406,-0.017395682043231334,0.6011181034500483],[-0.7992600715529367,-0.15783042872235187,-0.579890415329063],[0.14765924994962878,0.028333398585379376,-0.9886323707166963],[0.09099770145664492,0.11942590373998313,-0.9886641855784478],[0.10904154289988179,0.17726526912964463,-0.9781037604888388],[0.28021415240321823,0.18177534016737854,-0.9425697610787118],[0.5698707090822834,0.24650009950399188,-0.7838909846876527],[0.7285057633347243,0.3418992952380737,-0.593619595956703],[0.8725771222030154,0.2643768670269809,-0.4107481442306243],[0.9078455643762641,0.29874548707447557,-0.2942236652531147],[0.6704902539091827,0.29191953913028607,-0.6820746308775609]];
+        var backward_template = [[-0.4329478230736424,0.0963393884574018,0.8962560486420429],[-0.43294782307364266,0.09633938845740185,0.8962560486420426],[-0.38395135837296485,0.4011085255018309,-0.8316810116705214],[-0.3091616869066213,0.44046436926735144,-0.8428583456043884],[0.01315766381931722,0.4645086164751424,-0.8854708471221211],[0.050192827669871876,0.4117621188946093,-0.9099080379323639],[0.1547826292816943,0.2519652016276497,-0.9552779045080982],[0.199137673262405,0.34735757833308684,-0.9163443129425801],[0.3236627397508435,0.37067783556876627,-0.8705402765610748],[0.34709402099232417,0.3426467654319517,-0.8729942352217459],[0.24137786784096396,0.39883711449965537,-0.8846839441371924],[0.24137786784096393,0.39883711449965525,-0.8846839441371924],[0.4197980517043366,0.3439715749725972,-0.8399125855683519],[0.4197980517043366,0.34397157497259717,-0.8399125855683518],[0.4800299384347038,0.41146828046594425,-0.7747677796454713],[0.4800299384347039,0.4114682804659443,-0.7747677796454712],[0.4106135035609854,0.3210202922559211,-0.8534298580746373],[0.4114321315002143,0.33949387492727856,-0.8458531255815347],[0.48632421119709923,0.3437804650231369,-0.8033080066026946],[0.4694831567329592,0.30296689639625,-0.8293350500443591],[0.514257098039243,0.2827152633769024,-0.8096985346225996],[0.44489446505910957,0.37559439273383716,-0.813017691755025],[0.4021040390364247,0.5566809672740839,-0.7269240967703463],[-0.2912526819997465,0.5820662620314269,0.7591908467788037],[-0.3404983014895565,0.06959646115595987,0.9376658462785632],[-0.5213761013419965,0.23694135192467203,0.8197717711031095],[-0.6719699456582146,0.6282362309544787,0.3921423596708306],[-0.7252303964940559,0.48472736219903506,0.4889583380377514]];
+        var up_template = [[0.3931954656332231,-0.6894349094426494,-0.6083394048122139],[0.4421543443366109,-0.8203402357343829,-0.36268641195875956],[0.3015707785184035,-0.9413774082642385,0.15120727744890203],[0.2616387577142776,-0.9591120543407331,0.10793158796213433],[0.2913952789933124,-0.9158201732607844,0.276337115909167],[0.2913952789933126,-0.9158201732607844,0.27633711590916693],[0.41122908851622636,-0.7580156330902431,0.5062637027764402],[0.45744602928895145,-0.841720000256749,0.2867936042793671],[0.42436185743193716,-0.9009856693809205,0.09023213134538498],[0.3288347995369369,-0.9409570732127893,-0.08042052588937748],[0.2974460304623019,-0.9526419763239945,-0.06323862670657082],[0.19078539845979275,-0.8784843326719075,0.43802535198836545],[0.13683398345831746,-0.7916417556448282,0.595466028997879],[0.19507615628653932,-0.73413850579283,0.6503736983925015],[0.311796363800432,-0.7116421709557034,0.6295621081658919],[0.7239315672979126,-0.310841013853032,0.6158741348493272],[0.904534074386287,0.08576135962252864,0.4176877990435421],[0.7872099057644818,0.5407399980548087,0.296480722425525],[0.7272032213367952,0.5934877507711737,0.3448880464179087],[0.6102149730657696,0.7329061964231376,-0.3008092317248776],[0.3345047838450289,0.5682310854629098,-0.7518111352583396],[0.03829506962732256,0.48829712220081406,-0.8718368012951976],[-0.5096789930217579,0.19024102899255158,-0.8390683374792436],[-0.638285620371274,-0.08228352620950699,-0.7653893702827256],[-0.576352521716996,-0.15462602972791853,-0.802439132670535],[-0.6894195816489029,0.057836552295011494,-0.7220495645436524],[-0.6078932945112059,0.06610525457967889,-0.7912621801939406],[-0.4393909490615608,0.034499867440032396,-0.8976331951467711],[-0.4011899454284438,0.22571552018396782,-0.8877494757166591]];
+        var down_template = [[0.5016632143414363,-0.35683171276110914,0.7880387986289705],[0.5143110183323178,-0.4525432829004476,0.7284838732076777],[0.4143121426536822,-0.6396146313944675,0.6474863487022985],[0.20060543839287479,-0.7647999781589362,0.6122405176850788],[0.020712307965896414,-0.8553224045316917,0.517681933821194],[-0.05548153361697582,-0.9723095611164896,0.22701523470676513],[-0.8318886879388758,-0.2598046663283034,-0.4903700095166656],[-0.6626649031583332,0.29937332173273157,-0.6864771229668671],[-0.5644889275061177,0.6350628708747854,-0.5273020014747419],[-0.5597059622425012,0.7212159520432299,-0.40813819516013605],[-0.5213870676090696,0.7530338440014036,-0.4013671081671804],[-0.42951505541001667,0.7774736754765836,-0.45940341870415163],[-0.40151036435307697,0.8143840276626778,-0.41900845194933034],[-0.4765613749379,0.8126373356246014,-0.33542483012777563],[-0.442015621354421,0.8674535436749564,-0.22835616927165667],[-0.35522910525971574,0.9095530134937787,-0.2156979332788516],[-0.24149187228049018,0.932912167689308,-0.2671264925081376],[-0.2814136842971468,0.9529088133601962,-0.11300943195489568],[-0.3499127236889651,0.9364910574891185,0.023357761953630856],[-0.3196980513469772,0.9344492116822967,0.1568369431966841],[-0.19871721927702266,0.9393180414835183,0.2796302625009947],[-0.3238790741390571,0.7039138125677367,0.6321453075133757],[-0.5077755168575743,0.5927137477374171,0.6251835232338492],[-0.4620929308115145,0.6752361276011358,0.5749141633985437],[-0.3400262240487626,0.7515170086612928,0.5653356106348892],[-0.134022931818962,0.7196642992563833,0.6812643760849885],[-0.022262150732644963,0.6876660061232391,0.7256857864580719],[-0.31590575259962556,0.692012963773135,0.6490929158790641]];
+
+        // initialize raw mode
+        $scope.collection_features = [];
+        $scope.collection_feature_magnitudes = [];
+        $scope.analysis_index = 0;
+        $scope.unrecognized_count = 0;
+        $scope.time = 0;
+        //state value
+        $scope.recognition_state = "non";
+        $scope.pre_gesturestate = "non";
+        //session
+        $scope.session_num = 0;
+        $scope.session_image = "img/cruise.png";
+        // progress
+        $scope.progress_value = 100;
+        var music_length = 254;
+        // gesture recognition
+        $scope.gesture_recog = true;
+        // style
+        $scope.symbol={width:'120px'};
+        // description
+        $scope.description_first = "세월호를 배가 물위를 떠다니는 모습을 형상화,";
+        $scope.description_second = "핸드폰을 손에 들고 좌우로 움직이는 제스처입니다.";
+        // gesture cut out
+        $scope.description = true;
+
+        // gesture recognize
+        var gesture = function (callback) {
+            var timestampOne = 0;
+            var timestampTwo = 0;
+            return {
+              setTimestampOne : function() { timestampOne = new Date().getTime();},
+              setTimestampTwo : function() { timestampTwo = new Date().getTime(); callback(timestampOne, timestampTwo); }
+            };
+        };
+
+        var traffic = gesture(function(timestampOne, timestampTwo) {
+            var gap = Math.abs(timestampOne - timestampTwo);
+            if (gap < 4000 && gap > 3000) {
+                // [Socket] Gesture
+                $scope.socket.emit('Gesture', {name: my_name, timestamp: new Date().getTime()});
+                console.log('You are doing a gesture in proper way');
+            }
+        });
+
+        // set one and two template with a initial gesture
+        var one_template = left_template;
+        var two_template = right_template;
+        var frame_size = Math.min(one_template.length, two_template.length);
+        console.log('A Length of the first and second template  : ' + one_template.length + ', ' + two_template.length);
+
+        // start collecting
+        // 12초 - 70초까지 Session 1, 88초 - 136초 Session 2, 156초 - 210초 Session 3, 210초 - 270 듣기
+        var tick = 0;
+        var gravity = [0, 0, 0];
+        var vibration_info = [400, 660, 900, 1160, 1420, 1680, 1920, 2180, 2440, 3200, 3460, 3720, 3980, 4240, 4480, 4740, 4980, 5240, 6020, 6260, 6520, 6780, 7040, 7280, 7540, 7800];
+
+        $scope.stop = $interval(function() {
+            tick = tick + 1;
+            if(tick % 20 === 0) {
+                var index = vibration_info.indexOf(tick);
+                if(index !== -1 && $scope.vibration) {
+                    $cordovaVibration.vibrate(3000);
+                    $scope.vibration = false;
+                }
+            }
+
+            if (tick % 40 === 0) {
+                // increase timer
+                $scope.time = $scope.time + 1;
+                $scope.progress_value = ($scope.time * 100) / music_length;
+
+                // increase unrecognized_count
+                if ($scope.time > 7 && $scope.time < 210) {
+                    if ($scope.recognition_state === "non") {
+                     $scope.unrecognized_count = $scope.unrecognized_count + 1;
+                    } else {
+                        $scope.unrecognized_count = 0;
+                        $scope.recognition_state = "non";
+                    }
+                }
+
+                // volume control
+                if ($scope.unrecognized_count > 8 && $scope.session_num !== 3) $cordovaNativeAudio.setVolumeForComplexAsset('music', 0.1);
+                else $cordovaNativeAudio.setVolumeForComplexAsset('music', 1.0);
+
+                // change session
+                if ($scope.time > 70 && $scope.session_num === 0) { // 2번째 session
+                    // change session num
+                    $scope.session_num = 1;
+                    $scope.session_image = "img/hug.png";
+                    // change description
+                    $scope.description_first = "세월호 희생자들을 안아주는 것을 형상화,";
+                    $scope.description_second = "핸드폰을 가슴 위에 대고 앞뒤로 움직이는 제스처입니다.";
+                    // change template
+                    one_template = forward_template;
+                    two_template = backward_template;
+                    frame_size = Math.min(one_template.length, two_template.length);
+                    console.log('A Length of the first and second template  : ' + one_template.length + ', ' + two_template.length);
+                } else if ($scope.time > 130 && $scope.session_num === 1) {
+                    // change session num
+                    $scope.session_num = 2;
+                    $scope.session_image = "img/fist.png";
+                    // change description
+                    $scope.description_first = "세월호 참사를 함께 기억하는 것을 형상화.";
+                    $scope.description_second = "핸드폰을 손을 내밀듯이 앞 뒤로 움직이는 제스처입니다.";
+                    // change template
+                    one_template = up_template;
+                    two_template = down_template;
+                    frame_size = Math.min(one_template.length, two_template.length);
+                    console.log('A Length of the first and second template  : ' + one_template.length + ', ' + two_template.length);
+                } else if ($scope.time > 198 && $scope.session_num === 2) {
+                    // change session num
+                    $scope.session_num = 3;
+                    $scope.symbol = {width:'200px'};
+                    $scope.session_image = "img/ribbon.png";
+                    $scope.description = false;
+                    // stop gesture
+                    $scope.gesture_recog = false;
+                    $cordovaNativeAudio.stop('beat');
+                    $cordovaNativeAudio.setVolumeForComplexAsset('music', 1.0);
+                } else if ($scope.time > 252) {
+                    // stop music
+                    $scope.stopGame();
+                }
+
+                //if(($scope.time > 12 && $scope.time < 70) || ($scope.time > 88 && $scope.time < 136) || ($scope.time > 156 && $scope.time < 210)) {
+                //    var index = rhythm_info.indexOf($scope.time);
+                //    if(index !== -1) {
+                //        if(index % 2 == 0) {
+                //            $cordovaNativeAudio.play('effect_one');
+                //
+                //        } else {
+                //            $cordovaNativeAudio.play('effect_two');
+                //            $scope.recognition_state = "non";
+                //        }
+                //        // 진동이 있으면 진동까지
+                //    }
+                //}
+            }
+
+            if($scope.gesture_recog){
+                // get accelerometer data
+                $cordovaDeviceMotion.getCurrentAcceleration().then(function (result) {
+
+                    $scope.analysis_index++;
+
+                    // calculate similarity
+                    if ($scope.collection_features.length > frame_size) {
+                        $scope.collection_features.shift();
+                        $scope.collection_feature_magnitudes.shift();
+
+                        // calculate average magnitude
+                        var sum = 0;
+                        for (var i = $scope.collection_feature_magnitudes.length - 5; i < $scope.collection_feature_magnitudes.length; i++)
+                            sum += $scope.collection_feature_magnitudes[i];
+                        $scope.avg_magnitude = sum / $scope.collection_feature_magnitudes.length;
+
+                        if ($scope.analysis_index % 2 == 0 && $scope.avg_magnitude > 0.2) {
+
+                            // get similarity
+                            if ($scope.pre_gesturestate !== 'One') {
+                                // Right or None
+                                var left_distance = $analyzer.getSimilarity(one_template, $scope.collection_features);
+                                if (left_distance < 16) {
+                                    console.log('One Gesture ' + tick);
+                                    $scope.recognition_state = "One";
+                                    $scope.pre_gesturestate = "One";
+                                    traffic.setTimestampOne();
+                                }
+                            } else if ($scope.pre_gesturestate !== 'Two') {
+                                var right_distance = $analyzer.getSimilarity(two_template, $scope.collection_features);
+                                if (right_distance < 16) {
+                                    console.log('Two Gesture ' + tick);
+                                    $scope.recognition_state = "Two";
+                                    $scope.pre_gesturestate = "Two";
+                                    traffic.setTimestampTwo();
+                                }
+                            }
+                        }
+                    }
+
+                    // remove gravity
+                    var alpha = 0.8;
+                    gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
+                    gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
+                    gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
+
+                    // normalize and make collection_features
+                    var frame_feature = [];
+                    var magnitude = Math.sqrt((result.x - gravity[0]) * (result.x - gravity[0]) + (result.y - gravity[1]) * (result.y - gravity[1]) + (result.z - gravity[2]) * (result.z - gravity[2]));
+                    frame_feature.push((result.x - gravity[0]) / magnitude);
+                    frame_feature.push((result.y - gravity[1]) / magnitude);
+                    frame_feature.push((result.z - gravity[2]) / magnitude);
+                    $scope.collection_features.push(frame_feature);
+                    $scope.collection_feature_magnitudes.push(magnitude);
+
+                }, function (err) {
+                });
+            }
+
+        }, 25);
+    };
 
 
-    // finish game session
+    // [Game] Stop
     $scope.stopGame = function() {
-        if(stop !== null) {
-            $interval.cancel(stop);
-            stop = null;
+        if($scope.stop !== null) {
+            $interval.cancel($scope.stop);
+            $scope.stop = null;
         }
         $cordovaNativeAudio.stop('music');
+        $cordovaNativeAudio.stop('beat');
     }
 
 });
+
+
+//
+//.controller('gestureCtrl', function($scope, $mdDialog, $localstorage, $state){
+//    /* 제스처에 대한 설명을 하고 각 제스처를 트레이닝 할 수 있는 화면 */
+//    console.log('Start: Gesture Ctrl');
+//
+//    $scope.checkbox_data = {ship: false, hug: false, fist: false};
+//
+//    // initialize checkbox
+//    var left = $localstorage.getTemplate('Left');
+//    var right = $localstorage.getTemplate('Right');
+//    var forward = $localstorage.getTemplate('Forward');
+//    var backward = $localstorage.getTemplate('Backward');
+//    var up = $localstorage.getTemplate('Up');
+//    var down = $localstorage.getTemplate('Down');
+//
+//    if(!isEmpty(left) && !isEmpty(right)) {
+//        console.log('Ship gesture has trained already');
+//        $scope.checkbox_data['ship'] = true;
+//    }
+//    if(!isEmpty(forward) && !isEmpty(backward)) {
+//        console.log('Hug gesture has trained already');
+//        $scope.checkbox_data['hug'] = true;
+//    }
+//    if(!isEmpty(up) && !isEmpty(down)) {
+//        console.log('Fist gesture has trained already');
+//        $scope.checkbox_data['fist'] = true;
+//    }
+//    function isEmpty(obj) {
+//      return Object.keys(obj).length === 0;
+//    }
+//
+//    // show dialog
+//    $scope.showTrainDialog = function(gesture) {
+//        console.log('Function: showTrainDialog for ' + gesture);
+//
+//        // gesture_가 붙은 것은 gesture template
+//        $scope.gesture_name = gesture;
+//
+//        $mdDialog.show({
+//          controller: trainController,
+//          templateUrl: 'templates/_train.html',
+//          parent: angular.element(document.body),
+//          clickOutsideToClose:true,
+//          scope: $scope,
+//          preserveScope: true
+//        })
+//        .then(function(answer) {
+//          console.log(answer);
+//        }, function() {
+//          console.log('cancelled');
+//        });
+//
+//    };
+//
+//    function trainController($scope, $mdDialog, $interval, $cordovaDeviceMotion, $analyzer, $cordovaNativeAudio, $localstorage) {
+//        /* 제스처를 트레이닝하는 다이얼로그 */
+//        console.log('Start: Train Controller');
+//
+//        // setting information
+//        var train_information = {
+//            ship: {train_title: '배모양', train_image_path: 'img/cruise.png', train_subone_title: '왼방향', train_subtwo_title: '오른방향', train_subone_name: 'Left', train_subtwo_name: 'Right'},
+//            hug: {train_title: '포옹', train_image_path: 'img/hug.png', train_subone_title: '앞방향', train_subtwo_title: '뒷방향', train_subone_name: 'Forward', train_subtwo_name: 'Backward'},
+//            fist: {train_title: '다짐', train_image_path: 'img/fist.png', train_subone_title: '윗방향', train_subtwo_title: '아랫방향', train_subone_name: 'Up', train_subtwo_name: 'Down'}
+//        };
+//        $scope.train_data = train_information[$scope.gesture_name];
+//
+//        // guide messages
+//        var train_guide = {ready: "제스처 등록을 시작해주세요.", waiting: "움직이 없이 기다려주세요.", starting: "제스처를 시작해주세요.", collecting: "수집중 입니다.", finished: "수집이 완료되었습니다."};
+//        $scope.train_guide_message = train_guide['ready'];
+//
+//        // training functions
+//        var stop = undefined;
+//
+//        // temporary storage
+//        $scope.subgesture_one_template = [];
+//        $scope.subgesture_two_template = [];
+//
+//        $scope.train_start = function(index) {
+//            // collect data for a subGesture
+//            console.log('Function: train_start');
+//
+//            // to prevent from calling multiple function at once.
+//            $scope.train_stop();
+//
+//            // set message
+//            $scope.train_guide_message = train_guide['waiting'];
+//
+//            // Data set
+//            var recorded_data = [
+//                [], // For_X
+//                [], // For_Y
+//                [] // For_Z
+//            ];
+//            var magnitude_array = [];
+//
+//            // Status Variables
+//            var isRecording = false;
+//            var isStable = false;
+//
+//            // start collection...
+//            var gravity = [0, 0, 0];
+//            stop = $interval(function() {
+//              // get accelerometer data
+//              $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
+//
+//                  // remove gravity
+//                  var alpha = 0.8;
+//
+//                  gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
+//                  gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
+//                  gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
+//
+//                  var x = result.x - gravity[0];
+//                  var y = result.y - gravity[1];
+//                  var z = result.z - gravity[2];
+//                  var magnitude = Math.sqrt(x * x + y * y + z * z);
+//
+//                  // add magnitude value to magnitude array
+//                  magnitude_array.push(magnitude);
+//
+//                  var avg = 10000;  // Quite Large AVG
+//                  if(magnitude_array.length > 5) { // 5는 magnitude average 의 크기
+//                    var sum = 0;
+//                    for(var i = 0; i < magnitude_array.length; i++)
+//                        sum += magnitude_array[i];
+//                    avg = sum / magnitude_array.length;
+//                    magnitude_array.shift();
+//                  }
+//
+//                  if(isRecording === false && isStable === false) { // before stable
+//                    if(avg < 0.5) { // stable
+//                        isStable = true;
+//                        $scope.train_guide_message = train_guide['starting'];
+//                    }
+//                  } else if(isRecording === false && isStable === true) { // After stable
+//                    if(avg > 1.5) { // moving
+//                        isRecording = true;
+//                        $scope.train_guide_message = train_guide['collecting'];
+//                    }
+//                  } else if(isRecording === true && isStable === true) {  // During Recording
+//                    if(avg < 1 && recorded_data[0].length > 10) {
+//                        $scope.train_stop();
+//                        $scope.train_guide_message = train_guide['finished'];
+//                        var template = [];
+//                        for(var j = 0; j < recorded_data[0].length; j++) {
+//                                var feature = [];
+//                                var mag = Math.sqrt(recorded_data[0][j] * recorded_data[0][j] + recorded_data[1][j] * recorded_data[1][j] + recorded_data[2][j] * recorded_data[2][j]);
+//                                feature.push(recorded_data[0][j] / mag); // x
+//                                feature.push(recorded_data[1][j] / mag); // y
+//                                feature.push(recorded_data[2][j] / mag); // z
+//                                template.push(feature);
+//                        }
+//                        if(index === 0)
+//                            $scope.subgesture_one_template = template;
+//                        else
+//                            $scope.subgesture_two_template = template;
+//                    } else {
+//                        recorded_data[0].push(x);
+//                        recorded_data[1].push(y);
+//                        recorded_data[2].push(z);
+//                    }
+//                  }
+//              }, function(err) {
+//                // An error occurred. Show a message to the user
+//              });
+//            }, 25);
+//        };
+//
+//        $scope.train_stop = function() {
+//            // stop collection
+//            console.log('Function: train_stop');
+//            if (angular.isDefined(stop)) {
+//              $interval.cancel(stop);
+//              stop = undefined;
+//            }
+//        };
+//
+//        // testing functions
+//        $scope.train_test_start = function() {
+//            if ( angular.isDefined(stop) ) return;
+//
+//            // start test
+//            if($scope.subgesture_one_template !== [] && $scope.subgesture_two_template !== []) {
+//                console.log('Function: train_test_start' + $scope.train_data['train_title']);
+//            } else {
+//                alert('트레이닝이 완료된 후에 테스트를 할 수 있습니다.');
+//                return;
+//            }
+//
+//            // initialize raw mode
+//            $scope.collection_features = [];
+//            $scope.collection_feature_magnitudes = [];
+//            $scope.analysis_index = 0;
+//
+//            $scope.current_state = "Non";
+//
+//            // get templates from local storage
+//            var left_template = $scope.subgesture_one_template;
+//            var right_template = $scope.subgesture_two_template;
+//            if(left_template.length === 0)
+//                left_template = $localstorage.getTemplate($scope.train_data['train_subone_name'])['subgesture'];
+//            if(right_template.length === 0)
+//                right_template = $localstorage.getTemplate($scope.train_data['train_subtwo_name'])['subgesture'];
+//            var frame_size = Math.min(left_template.length, right_template.length); // 이거 어떻게 정해야하는지 고민되는 구만
+//            console.log('A Length of a first template : ' + left_template.length);
+//            console.log('A Length of a second template : : ' + right_template.length);
+//
+//            $scope.left_distance = 0;
+//            $scope.right_distance = 0;
+//
+//            // start collecting
+//            var gravity = [0, 0, 0];
+//            stop = $interval(function() {
+//              // get accelerometer data
+//              $cordovaDeviceMotion.getCurrentAcceleration().then(function(result) {
+//
+//                  $scope.analysis_index++;
+//
+//                  // calculate similarity
+//                  if($scope.collection_features.length > frame_size) {
+//                     $scope.collection_features.shift();
+//                     $scope.collection_feature_magnitudes.shift();
+//
+//                     // calculate average magnitude
+//                     var sum = 0;
+//                     for(var i = $scope.collection_feature_magnitudes.length - 5; i < $scope.collection_feature_magnitudes.length; i++)
+//                        sum += $scope.collection_feature_magnitudes[i];
+//                     $scope.avg_magnitude = sum / $scope.collection_feature_magnitudes.length;
+//
+//                     if($scope.analysis_index % 2 == 0 && $scope.avg_magnitude > 0.2) {
+//                         // 현재 Left 인지 Right 인지로 구분해서 하면 되겠구나
+//                         if($scope.current_state !== 'Left') {
+//                            // Right or None
+//                            var left_distance = $analyzer.getSimilarity(left_template, $scope.collection_features);
+//                            if(left_distance < 15) {
+//                                console.log('Left Gesture');
+//                                $scope.current_state = 'Left';
+//                                $scope.guide_message = 'Left';
+//                                $scope.left_distance = left_distance;
+//                                // 소리 Play
+//                                $cordovaNativeAudio.play('effect_one');
+//                            }
+//                         } else if($scope.current_state !== 'Right') {
+//                            var right_distance = $analyzer.getSimilarity(right_template, $scope.collection_features);
+//                            if(right_distance < 15) {
+//                                console.log('Right Gesture');
+//                                $scope.current_state = 'Right';
+//                                $scope.guide_message = 'Right';
+//                                $scope.right_distance = right_distance;
+//                                // 소리 Play
+//                                $cordovaNativeAudio.play('effect_two');
+//                            }
+//                         }
+//                     }
+//                  }
+//
+//                  // remove gravity
+//                  var alpha = 0.8;
+//                  gravity[0] = alpha * gravity[0] + (1 - alpha) * result.x;
+//                  gravity[1] = alpha * gravity[1] + (1 - alpha) * result.y;
+//                  gravity[2] = alpha * gravity[2] + (1 - alpha) * result.z;
+//
+//                  // normalize and make collection_features
+//                  var frame_feature = [];
+//                  var magnitude = Math.sqrt((result.x - gravity[0]) * (result.x - gravity[0]) + (result.y - gravity[1]) * (result.y - gravity[1]) + (result.z - gravity[2]) * (result.z - gravity[2]));
+//                  frame_feature.push((result.x - gravity[0]) / magnitude);
+//                  frame_feature.push((result.y - gravity[1]) / magnitude);
+//                  frame_feature.push((result.z - gravity[2]) / magnitude);
+//                  $scope.collection_features.push(frame_feature);
+//                  $scope.collection_feature_magnitudes.push(magnitude);
+//
+//              }, function(err) {
+//                // An error occurred. Show a message to the user
+//
+//              });
+//            }, 25);
+//        };
+//
+//        // dialog functions
+//        $scope.answer = function(answer) {
+//            if(answer === 'complete') {
+//                $localstorage.setTemplate( $scope.train_data['train_subone_name'], {subgesture:$scope.subgesture_one_template});
+//                $localstorage.setTemplate( $scope.train_data['train_subtwo_name'], {subgesture:$scope.subgesture_two_template});
+//            }
+//            $mdDialog.hide(answer);
+//            $scope.checkbox_data[$scope.gesture_name] = true;
+//        };
+//
+//    }
+//
+//    $scope.ImReady = function() {
+//        console.log('Function: ImReady');
+//        $state.go('game');
+//
+//    };
+//})
+
 
 //
 //.controller('homeCtrl', function($scope, $cordovaDeviceMotion, $interval, $state, $analyzer, $communication, $ionicPopup) {

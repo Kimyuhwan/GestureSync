@@ -2,20 +2,6 @@
 
     <md-content layout-fill layout="column" layout-align="center start">
 
-        <div layout="column" layout-fill style="padding-bottom: 10px;">
-            <h3 class="md-title" style="padding-left: 30px;"> 트레이닝 정보</h3>
-            <div layout="row" layout-fill layout-align="center center">
-                <md-checkbox ng-disabled="true" ng-model="checkbox_data.ship" aria-label="ship"></md-checkbox> 배모양
-                <md-checkbox ng-disabled="true" ng-model="checkbox_data.hug" aria-label="hug"></md-checkbox> 포옹
-                <md-checkbox ng-disabled="true" ng-model="checkbox_data.fist" aria-label="fist"></md-checkbox> 다짐
-            </div>
-            <div layout="row" layout-fill layout-align="center center">
-                <p class="md-caption"> (트레이닝이 되면 체크박스가 자동으로 채워집니다)</p>
-            </div>
-        </div>
-
-        <br/>
-
         <div layout="column" layout-wrap>
             <div layout="row" style="padding-bottom: 2px;">
                 <h3 style="padding-left: 30px;" class="md-title"> 제스처 정보 </h3>
@@ -26,7 +12,7 @@
                     <b style="padding-left: 7px;"> 배모양 제스처 </b>
                 </div>
                 <div layout="row" flex layout-align="end center" style="padding-right: 30px">
-                    <md-button class="md-raised" ng-click="showTrainDialog('ship')"> 트레이닝 시작</md-button>
+                    <md-button class="md-raised" ng-click="showTrainDialog('ship')"> 테스트 시작</md-button>
                 </div>
             </div>
             <div layout="row" style="padding-left: 15px; padding-right: 15px; padding-top:5px; padding-bottom: 5px;" layout-align="center center">
@@ -46,7 +32,7 @@
                     <b style="padding-left: 7px;"> 포옹 제스처 </b>
                 </div>
                 <div layout="row" flex layout-align="end center" style="padding-right: 30px">
-                    <md-button class="md-raised" ng-click="showTrainDialog('hug')"> 트레이닝 시작</md-button>
+                    <md-button class="md-raised" ng-click="showTrainDialog('hug')"> 테스트 시작</md-button>
                 </div>
             </div>
             <div layout="row" style="padding-left: 15px; padding-right: 15px; padding-top:10px; padding-bottom: 5px;" layout-align="center center">
@@ -63,15 +49,15 @@
             <div layout="row">
                 <div layout="row" flex style="padding-left: 30px;" layout-align="start center">
                     <img style="width: 50px" src="img/fist.png"/>
-                    <b style="padding-left: 7px;"> 다짐 제스처 </b>
+                    <b style="padding-left: 7px;"> 손잡는 제스처 </b>
                 </div>
                 <div layout="row" flex layout-align="end center" style="padding-right: 30px">
-                    <md-button class="md-raised" ng-click="showTrainDialog('fist')"> 트레이닝 시작</md-button>
+                    <md-button class="md-raised" ng-click="showTrainDialog('fist')"> 테스트 시작</md-button>
                 </div>
             </div>
             <div layout="row" style="padding-left: 15px; padding-right: 15px; padding-top:5px; padding-bottom: 5px;" layout-align="center center">
                 <p>
-                    세월호 참사를 기억하겠다는 다짐을 형상화. <br/>핸드폰을 손에 들고 위아래로 움직이는 제스처입니다.
+                    세월호 참사를 함께 기억하는 것을 형상화. <br/>핸드폰을 손을 내밀듯이 앞 뒤로 움직이는 제스처입니다.
                 </p>
             </div>
         </div>
@@ -83,7 +69,7 @@
 
     <div class="tabs no-border no-padding" style="height:auto; background-color: transparent; background-image: none; border-style: solid">
         <section layout="row" layout-align="center center" layout-fill style="padding-bottom: 8px;">
-            <md-button flex class="md-accent md-raised" md-ripple-size="full" ng-disabled="!(checkbox_data.ship && checkbox_data.hug && checkbox_data.fist)" ng-click="ImReady()">준비 완료</md-button>
+            <md-button flex class="md-accent md-raised" md-ripple-size="full" ng-click="ImReady()">준비 완료</md-button>
         </section>
    </div>
 

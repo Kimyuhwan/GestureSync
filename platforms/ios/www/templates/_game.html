@@ -2,14 +2,19 @@
 
     <md-content layout-fill layout="column" layout-align="center center">
 
-        <h3>Session {{ session_num + 1 }}</h3>
-        <img style="width: 120px" ng-src="{{ session_image }}"/>
+        <h3>Session {{ session_num +1 }}</h3>
+        <img ng-style="symbol" ng-src="{{ session_image }}"/>
         <h2><b> {{ time | secondsToDateTime | date: 'mm:ss'}} </b></h2>
+        <div ng-show="description" layout="row" style="padding-left: 15px; padding-right: 15px; padding-top:5px; padding-bottom: 5px;" layout-align="center center">
+            {{description_first}} <br/> {{description_second}}
+        </div>
         <br/>
         <md-button class="md-accent md-raised" ng-click="stopGame()"> 사운드 종료 </md-button>
         <br/>
+        <!--
         <b> Current Gesture : {{ recognition_state }}</b>
         Unrecognized count : {{ unrecognized_count }}
+        -->
     </md-content>
 
    <div class="tabs no-border no-padding" style="height:auto; background-color: transparent; background-image: none;">

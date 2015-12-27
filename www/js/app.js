@@ -60,6 +60,14 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
       console.error(error);
     });
 
+    $cordovaNativeAudio
+    .preloadComplex('beat', '/audio/beat.mp3',1,1)
+    .then(function (msg) {
+      console.log(msg);
+    }, function (error) {
+      console.error(error);
+    });
+
     $state.go('gesture');
 
   });

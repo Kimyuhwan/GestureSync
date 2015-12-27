@@ -18,6 +18,7 @@ angular.module('starter.services', [])
     }
 ])
 
+
 .factory('$communication', ['$http', function($http){
 
         var baseUrl = "http://128.199.239.83:3000/";
