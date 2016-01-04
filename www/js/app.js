@@ -96,6 +96,12 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     controller: 'gestureCtrl'
   })
 
+  .state('admin', {
+    url: '/admin',
+    templateUrl: 'templates/_admin.html',
+    controller: 'adminCtrl'
+  })
+
   .state('game', {
     url: '/game',
     templateUrl: 'templates/_game.html',
