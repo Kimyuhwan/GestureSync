@@ -68,7 +68,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
       console.error(error);
     });
 
-    $state.go('gesture');
+    $state.go('overall');
 
   });
 
