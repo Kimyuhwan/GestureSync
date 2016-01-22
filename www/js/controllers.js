@@ -55,8 +55,9 @@ angular.module('starter.controllers', [])
     console.log('Start: introductionCtrl');
 
     $scope.goNext = function() {
-        $state.go('tutorial');
+        $state.go('overall', {}, {reload: true, inherit: true, notify: true});
     }
+
 })
 
 .controller('tutorialCtrl', function($scope, $state) {

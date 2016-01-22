@@ -86,7 +86,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
   .state('overall', {
     url: '/overall',
     templateUrl: 'templates/_overall.html',
-    controller: 'overallCtrl'
+    controller: 'overallCtrl',
+    cache: false
   })
 
   .state('introduction', {
