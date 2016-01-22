@@ -495,6 +495,7 @@ angular.module('starter.controllers', [])
 
     $scope.socket.on('PushComments',function(data){
         console.log('PushComments: Successfully get Comments' + data);
+
         $scope.comments = data;
     });
 
