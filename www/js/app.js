@@ -83,12 +83,23 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
   // Each state's controller can be found in controllers.js
   $stateProvider
 
-  .state('login', {
-    url: '/login',
-    templateUrl: 'templates/_login.html',
-    controller: 'loginCtrl'
+  .state('overall', {
+    url: '/overall',
+    templateUrl: 'templates/_overall.html',
+    controller: 'overallCtrl'
   })
 
+  .state('introduction', {
+    url: '/introduction',
+    templateUrl: 'templates/_introduction.html',
+    controller: 'introductionCtrl'
+  })
+
+  .state('tutorial', {
+    url: '/tutorial',
+    templateUrl: 'templates/_tutorial.html',
+    controller: 'tutorialCtrl'
+  })
 
   .state('gesture', {
     url: '/gesture',
@@ -102,11 +113,19 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     controller: 'adminCtrl'
   })
 
+  .state('comments', {
+    url: '/comments',
+    templateUrl: 'templates/_comments.html',
+    controller: 'commentsCtrl'
+  })
+
   .state('game', {
     url: '/game',
     templateUrl: 'templates/_game.html',
     controller: 'gameCtrl'
   });
+
+
 
   //.state('home', {
   //  url: '/home',

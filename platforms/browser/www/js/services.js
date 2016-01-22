@@ -18,6 +18,7 @@ angular.module('starter.services', [])
     }
 ])
 
+
 .factory('$communication', ['$http', function($http){
 
         var baseUrl = "http://128.199.239.83:3000/";
@@ -164,14 +165,16 @@ angular.module('starter.services', [])
 
 .factory('$socket',function(socketFactory){
 
+
+
     function mySocket() {
         var myIoSocket = io.connect('http://128.199.239.83:5000');
 
-        mySocket = socketFactory({
+        ySocket = socketFactory({
             ioSocket: myIoSocket
         });
 
-        return mySocket;
+        return ySocket;
     }
 
 	return {
@@ -179,4 +182,10 @@ angular.module('starter.services', [])
             return mySocket();
         }
     };
-});
+})
+
+.filter('secondsToDateTime', [function() {
+    return function(seconds) {
+        return new Date(1970,0,1).setSeconds(seconds);
+    };
+}]);

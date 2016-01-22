@@ -1,0 +1,37 @@
+<md-dialog aria-label="Gesture (Ship)" ng-cloak>
+  <form style="padding-left: 10px; padding-right:10px;">
+
+    <div class="md-dialog-content" layout="column">
+
+        <div layout="row" flex layout-align="start center" style="padding-top:10px; padding-bottom: 10px;">
+            <img style="width: 40px" ng-src="{{train_data.train_image_path}}"/>
+            <b style="padding-left: 7px;"> {{train_data.train_title}} 제스처 </b>
+        </div>
+
+        <b style="padding-bottom: 5px;"> &nbsp;&nbsp;제스처 등록 및 테스트 가이드 </b>
+        <img src="http://placehold.it/350x200" style="padding-bottom: 10px;">
+
+        <b style="padding-bottom: 5px;"> &nbsp;&nbsp;트레이닝 가이드</b>
+        <p style="padding-left:10px;"> {{train_guide_message}} </p>
+        
+        <section layout="row" layout-align="center center" layout-fill>
+            <div layout="column">
+                <md-button flex class="md-primary md-raised md-hue-2" md-ripple-size="full" ng-click="train_start(0)">{{train_data.train_subone_title}} 제스처 등록</md-button>
+                <md-button flex class="md-warn md-raised md-hue-2" md-ripple-size="full" ng-click="train_start(1)">{{train_data.train_subtwo_title}} 제스처 등록</md-button>
+            </div>
+            <div layout="column">
+                <md-button flex class="md-raised" md-ripple-size="full" ng-click="train_test_start()">테스트 시작</md-button>
+                <md-button flex class="md-raised" md-ripple-size="full" ng-click="train_stop()">테스트 종료</md-button>
+            </div>
+        </section>
+
+        <br/>
+    </div>
+
+    <div flex class="md-actions" layout="row" layout-align="center center" style="border-top: solid; border-top-color: darkgray; border-top-width: thin">
+      <md-button ng-click="answer('complete')" >제스처 등록 완료</md-button>
+      <md-button ng-click="answer('cancel')" >제스처 등록 취소</md-button>
+    </div>
+
+  </form>
+</md-dialog>

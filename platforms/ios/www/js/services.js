@@ -8,6 +8,18 @@ angular.module('starter.services', [])
             getID: function () {
                 return $window.localStorage['ID']  || null;
             },
+            setIndex: function (value) {
+                $window.localStorage['Name'] = value;
+            },
+            getIndex: function () {
+                return $window.localStorage['Name']  || null;
+            },
+            setComments: function (value) {
+                $window.localStorage['Comments'] = value;
+            },
+            getComments: function () {
+                return $window.localStorage['Comments']  || null;
+            },
             setTemplate: function(key, value) {
                 $window.localStorage[key] = JSON.stringify(value);
             },
@@ -165,19 +177,24 @@ angular.module('starter.services', [])
 
 .factory('$socket',function(socketFactory){
 
+    var ySocket = null;
+
     function mySocket() {
         var myIoSocket = io.connect('http://128.199.239.83:5000');
 
-        mySocket = socketFactory({
+        ySocket = socketFactory({
             ioSocket: myIoSocket
         });
 
-        return mySocket;
+        return ySocket;
     }
 
 	return {
         getSocket: function() {
-            return mySocket();
+            if(ySocket !== null)
+                return ySocket;
+            else
+                return mySocket();
         }
     };
 })

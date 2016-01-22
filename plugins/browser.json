@@ -47,6 +47,9 @@
         },
         "org.apache.cordova.vibration": {
             "PACKAGE_NAME": "com.nclab.gesture"
+        },
+        "cordova-plugin-dialogs": {
+            "PACKAGE_NAME": "com.nclab.gesture"
         }
     },
     "dependent_plugins": {

@@ -47,6 +47,10 @@
                         {
                             "xml": "<feature name=\"Vibration\"><param name=\"ios-package\" value=\"CDVVibration\" /></feature>",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Notification\"><param name=\"ios-package\" value=\"CDVNotification\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -84,7 +88,7 @@
                         },
                         {
                             "xml": true,
-                            "count": 1
+                            "count": 2
                         }
                     ],
                     "AssetsLibrary.framework": [
@@ -132,6 +136,9 @@
             "PACKAGE_NAME": "com.nclab.gesture"
         },
         "org.apache.cordova.vibration": {
+            "PACKAGE_NAME": "com.nclab.gesture"
+        },
+        "cordova-plugin-dialogs": {
             "PACKAGE_NAME": "com.nclab.gesture"
         }
     },
