@@ -55,7 +55,7 @@ angular.module('starter.controllers', [])
     console.log('Start: introductionCtrl');
 
     $scope.goNext = function() {
-        $state.go('overall', {}, {reload: true, inherit: true, notify: true});
+        $state.go('tutorial');
     }
 
 })
@@ -499,9 +499,7 @@ angular.module('starter.controllers', [])
     });
 
     $scope.goNext = function() {
-        $ionicHistory.clearHistory();
-        $ionicHistory.clearCache();
-        $state.go('overall');
+        $state.go('overall', {}, {reload: true, inherit: true, notify: true});
     }
 })
 

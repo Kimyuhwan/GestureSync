@@ -57,6 +57,7 @@ angular.module('starter.controllers', [])
     $scope.goNext = function() {
         $state.go('tutorial');
     }
+
 })
 
 .controller('tutorialCtrl', function($scope, $state) {
@@ -498,9 +499,7 @@ angular.module('starter.controllers', [])
     });
 
     $scope.goNext = function() {
-        $ionicHistory.clearHistory();
-        $ionicHistory.clearCache();
-        $state.go('overall');
+        $state.go('overall', {}, {reload: true, inherit: true, notify: true});
     }
 })
 
