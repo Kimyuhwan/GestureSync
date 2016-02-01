@@ -1,18 +1,32 @@
 <ion-view>
-    <md-content layout-fill layout="column" layout-align="center center">
-
-            {{progress}}
-
-            <md-input-container>
+    <ion-header-bar>
+      <section layout="row" layout-align="center center" style="padding-left: 15px; padding-bottom: 5px; padding-top: 5px">
+          <md-input-container>
               <label>참여 코드</label>
               <input ng-model="code">
-            </md-input-container>
+          </md-input-container>
+          <md-button ng-click="participate()" class="md-primary md-raised">참여</md-button>
+        </section>
+    </ion-header-bar>
 
-            <div class="col-sm-6">
-                <md-button ng-click="participate()" class="md-primary md-raised">참여</md-button>
-            </div>
+    <ion-content class="has-header" scroll="true" padding>
+        <section id="cd-timeline" class="cd-container">
+                <div ng-repeat="activity in timeline">
+                  <div class="cd-timeline-block">
+                    <!-- CUSTOMIZE YOUR STYLE USING DEFAULT IONIC VALUES SUCH AS POSITIVE, CALM, BALANCED,... -->
+                    <div class="cd-timeline-picture text-center dark">
+                      <img ng-src="img/{{activity.profilePicture}}"/>
+                    </div>
+                    <!-- CUSTOMIZE YOUR STYLE USING DEFAULT IONIC VALUES SUCH AS POSITIVE, CALM, BALANCED,... -->
+                    <div class="cd-timeline-content padding dark">
+                        <h5 class="marginBottom0 marginTop0">{{activity.title}}</h5>
+                        <p class="marginTop5 cd-author">by {{activity.author}} on {{activity.date | date: "d MMM"}}</p>
+                        <p class="timelineText">{{activity.text}}</p>
+                    </div>
+                  </div>
+                </div>
+        </section>
 
+    </ion-content>
 
-
-    </md-content>
 </ion-view>
