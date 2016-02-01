@@ -1,6 +1,10 @@
 # Specifies intentionally untracked files to ignore when using Git
 # http://git-scm.com/docs/gitignore
 
-platforms
+platforms/
 plugins
 .idea/workspace.xml
+platforms/ios/Gesture.xcodeproj/project.xcworkspace/xcuserdata/yuhwan.xcuserdatad/UserInterfaceState.xcuserstate
+platforms/ios/www/index.html
+platforms/ios/www/js/controllers.js
+platforms/ios/www/templates/_overall.html
