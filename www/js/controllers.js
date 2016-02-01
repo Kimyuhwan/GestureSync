@@ -5,51 +5,52 @@ angular.module('starter.controllers', [])
     console.log('Start: Overall Ctrl');
 
     // timeline
-    $scope.timeline = [{
-        date: new Date(),
-        title: "I am here",
-        author:"Ludo Anderson",
-        profilePicture:"perry.png",
-        text: "Lorem ipsum dolor sit amet",
-        type: "location"
-
-      },{
-        date: new Date(),
-        title: "For my friends",
-            author:"Sara Orwell",
-            profilePicture:"mike.png",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-        type: "text"
-      },{
-        date: new Date(),
-        title: "Look at my video!",
-        author:"Miranda Smith",
-        profilePicture:"max.png",
-        text: "Lorem ipsum dolor sit amet",
-        type: "video"
-
-      },{
-        date: new Date(),
-        title: "Awesome picture",
-        author:"John Mybeweeg",
-        profilePicture:"adam.jpg",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-        type: "picture"
-      },{
-        date: new Date(),
-        title: "Awesome picture",
-        author:"John Mybeweeg",
-        profilePicture:"adam.jpg",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-        type: "picture"
-      },{
-        date: new Date(),
-        title: "Awesome picture",
-        author:"John Mybeweeg",
-        profilePicture:"adam.jpg",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-        type: "picture"
-      }];
+    $scope.timeline=[];
+    //$scope.timeline = [{
+    //    date: new Date(),
+    //    title: "I am here",
+    //    author:"Ludo Anderson",
+    //    profilePicture:"perry.png",
+    //    text: "Lorem ipsum dolor sit amet",
+    //    type: "location"
+    //
+    //  },{
+    //    date: new Date(),
+    //    title: "For my friends",
+    //        author:"Sara Orwell",
+    //        profilePicture:"mike.png",
+    //    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
+    //    type: "text"
+    //  },{
+    //    date: new Date(),
+    //    title: "Look at my video!",
+    //    author:"Miranda Smith",
+    //    profilePicture:"max.png",
+    //    text: "Lorem ipsum dolor sit amet",
+    //    type: "video"
+    //
+    //  },{
+    //    date: new Date(),
+    //    title: "Awesome picture",
+    //    author:"John Mybeweeg",
+    //    profilePicture:"adam.jpg",
+    //    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
+    //    type: "picture"
+    //  },{
+    //    date: new Date(),
+    //    title: "Awesome picture",
+    //    author:"John Mybeweeg",
+    //    profilePicture:"adam.jpg",
+    //    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
+    //    type: "picture"
+    //  },{
+    //    date: new Date(),
+    //    title: "Awesome picture",
+    //    author:"John Mybeweeg",
+    //    profilePicture:"adam.jpg",
+    //    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
+    //    type: "picture"
+    //  }];
 
 
     $scope.code = "";
@@ -77,6 +78,19 @@ angular.module('starter.controllers', [])
     $scope.socket.on('UpdateProgress', function(data) {
         console.log('SocketOn: Update Progress');
         $scope.progress = data;
+        var ids = $scope.progress["ID"];
+        var comments = $scope.progress["Comments"];
+        var profilePictures = ["adam.jpg", "ben.png", "mike.png", "max.png"];
+        //var dates = ***
+        for (var i=0; i< ids.length; i++){
+            var comment = ""
+            if (comments[i].length == 0) {
+                comment = "아직 참여하지 않으셨습니다.";
+            } else {
+                comment = comments[i];
+            }
+            $scope.timeline.push({date: new Date(), id: ids[i], comment: comment, profilePicture:profilePictures[i%4]});
+        }
     });
 
     $scope.socket.emit('UpdateOverall');
